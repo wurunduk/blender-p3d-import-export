@@ -29,7 +29,7 @@ def sane_name(name):
         return name_fixed
 
     # strip non ascii chars
-    new_name_clean = new_name = name.encode("ASCII", "replace").decode("ASCII")[:12]
+    new_name_clean = new_name = name.encode("ASCII", "replace").decode("ASCII")
     i = 0
 
     while new_name in name_unique:
@@ -475,22 +475,29 @@ def extract_triangles(mesh, materials_list):
 
             uf = mesh.tessface_uv_textures.active.data[i] if do_uv else None
 
+            fmt = 0
+            if(do_uv): fmt = face.material_index
+
             if do_uv:
                 f_uv = uf.uv
 
             if len(f_v) == 3:
-                new_tri = tri_wrapper((f_v[0], f_v[1], f_v[2]), face.material_index)
+                new_tri = tri_wrapper((f_v[0], f_v[1], f_v[2]), fmt)
                 if (do_uv):
                     new_tri.faceuvs = uv_key(f_uv[0]), uv_key(f_uv[1]), uv_key(f_uv[2])
+                else: new_tri.faceuvs = uv_key((0.0,0.0)), uv_key((1.0,0.0)), uv_key((0.0,1.0))
                 tri_list.append(new_tri)
 
             else:  # it's a quad
-                new_tri = tri_wrapper((f_v[0], f_v[1], f_v[2]), face.material_index)
-                new_tri_2 = tri_wrapper((f_v[0], f_v[2], f_v[3]), face.material_index)
+                new_tri = tri_wrapper((f_v[0], f_v[1], f_v[2]), fmt)
+                new_tri_2 = tri_wrapper((f_v[0], f_v[2], f_v[3]), fmt)
 
                 if (do_uv):
                     new_tri.faceuvs = uv_key(f_uv[0]), uv_key(f_uv[1]), uv_key(f_uv[2])
                     new_tri_2.faceuvs = uv_key(f_uv[0]), uv_key(f_uv[2]), uv_key(f_uv[3])
+                else:
+                    new_tri.faceuvs = uv_key((0.0,0.0)), uv_key((1.0,0.0)), uv_key((0.0,1.0))
+                    new_tri_2.faceuvs = uv_key((0.0,0.0)), uv_key((1.0,0.0)), uv_key((0.0,1.0))
 
                 tri_list.append(new_tri)
                 tri_list.append(new_tri_2)
@@ -522,7 +529,7 @@ def save(operator,
         bpy.ops.object.mode_set(mode='OBJECT')
 
     # Make a list of all materials used in the selected meshes 
-    materials_list = []
+    materials_list = ["colwhite"]
     mesh_objects = []
     lamp_objects = []
 
