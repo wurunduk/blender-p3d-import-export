@@ -519,9 +519,13 @@ def save(operator,
     import time
     from bpy_extras.io_utils import create_derived_objects, free_derived_objects
 
+    workingpath = '\\'.join(filepath.split('\\')[0:-1])
 
+    log_file = open(workingpath + "//export-log.txt", 'a')
     # Time the export
     time1 = time.clock()
+
+    log_file.write("Started exporting " + filepath + " model\n")
 
     global_matrix = mathutils.Matrix()
 
@@ -533,14 +537,17 @@ def save(operator,
     mesh_objects = []
     lamp_objects = []
 
+    collfound = False
+    shadfound = False
+
+    meshes_list = ""
+
     scene = context.scene
 
     if use_selection:
         objects = (ob for ob in scene.objects if ob.is_visible(scene) and ob.select)
     else:
         objects = (ob for ob in scene.objects if ob.is_visible(scene))
-
-
 
     for ob in objects:
         free, derived = create_derived_objects(scene, ob)
@@ -554,6 +561,11 @@ def save(operator,
                     data = ob_derived.to_mesh(scene, True, 'PREVIEW')
                 except:
                     data = None
+
+                if "mainshad" in ob.name: shadfound = True
+                elif "maincoll" in ob.name: collfound = True
+
+                meshes_list += ob.name + " "
 
                 if data:
                     matrix = global_matrix * mat
@@ -580,6 +592,7 @@ def save(operator,
                                 materials_list.append(mat_name)
 
                     else:
+                        log_file.write("No UVs found on mesh" + str(ob.name) + ". Using default UVs.\n")
                         for mat in mat_ls:
                             if mat:  # material may be None so check its not.
                                 if mat.name not in materials_list:
@@ -596,6 +609,9 @@ def save(operator,
 
         if free:
             free_derived_objects(ob)
+
+
+    log_file.write("Meshes: " + meshes_list + "\n")
 
 
     # Initialize the main chunk (primary):
@@ -668,7 +684,14 @@ def save(operator,
         #if "coll" not in ob.name and "shad" not in ob.name: flags = flags | 2
         if "shad" in ob.name: flags = flags | 4
         elif "coll" in ob.name: flags = flags | 8
-        elif "main" in ob.name: flags = flags | 3
+        elif "main" in ob.name: 
+            flags = flags | 3
+            if shadfound == False: 
+                flags = flags | 4
+                log_file.write("! shadow mesh was not found, using main mesh for shadow.\n")
+            if collfound == False: 
+                flags = flags | 8
+                log_file.write("! collision mesh was not found, using main mesh for collisions.\n")
         else: flags = flags | 2
 
         #for some stupid reason these are not used?
@@ -778,5 +801,7 @@ def save(operator,
     name_mapping.clear()
 
     print("p3d export time: %.2f" % (time.clock() - time1))
+    log_file.write("Finished p3d export. Time taken: %.2f \n\n\n" % (time.clock() - time1))
+    log_file.close()
 
     return {'FINISHED'}

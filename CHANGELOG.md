@@ -8,6 +8,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 ### Changed
 ### Fixed
 
+## [0.2.0] - 2018-11-14
+### Added
+- export-log.txt file will be created on evry export in the same folder as the export path. This logs contains info about export process and includes list of all meshes ready for carinfo.cca
+### Fixed
+- Collision and Trace flags are now correctly set on export, so CD should not crash when trying to load LOD's or other stuff.
+
 ## [0.1.1] - 2018-11-13
 ### Fixed
 - Material names can now have any length.
