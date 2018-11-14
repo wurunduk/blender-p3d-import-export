@@ -8,6 +8,10 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 ### Changed
 ### Fixed
 
+## [1.2.1] - 2018-11-14
+### Fixed
+- Probably fixed position export.
+
 ## [1.2.0] - 2018-11-14
 ### Added
 - export-log.txt file will be created on evry export in the same folder as the export path. This logs contains info about export process and includes list of all meshes ready for carinfo.cca

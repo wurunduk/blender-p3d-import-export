@@ -707,7 +707,8 @@ def save(operator,
 
         submesh.add_variable("name", _3ds_string(sane_name(ob.name)))
         submesh.add_variable("flags", _3ds_uint(flags))
-        submesh.add_variable("pos", _3ds_point_3d(ob.matrix_world.to_translation()))
+        pos = ob.matrix_world.to_translation()
+        submesh.add_variable("pos", _3ds_point_3d((pos[0], pos[2], pos[1])))
 
         v = blender_mesh.vertices[0].co
         lowx = v[0]
