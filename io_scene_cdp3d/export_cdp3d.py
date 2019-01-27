@@ -528,7 +528,7 @@ def save(operator,
     time1 = time.clock()
     date = datetime.datetime.now()
 
-    log_file.write("Started exporting on" + date.strftime("%d-%m-%Y %H:%M:%S") + "\n" + "File path: " + filepath + "\n")
+    log_file.write("Started exporting on " + date.strftime("%d-%m-%Y %H:%M:%S") + "\n" + "File path: " + filepath + "\n")
 
     global_matrix = mathutils.Matrix()
 

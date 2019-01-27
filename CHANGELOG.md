@@ -8,6 +8,11 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 ### Changed
 ### Fixed
 
+## [1.3.0] - 2019-01-27
+### Added
+- Meshes can now be autocentered to behave like makep3d would
+- Added timestamps to the export-log.txt
+
 ## [1.2.1] - 2018-11-14
 ### Fixed
 - Probably fixed position export.
