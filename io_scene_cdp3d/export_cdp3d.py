@@ -17,6 +17,7 @@
 # ##### END GPL LICENSE BLOCK #####
 
 import struct
+import datetime
 
 
 name_unique = []  # stores str, ascii only
@@ -525,8 +526,9 @@ def save(operator,
     log_file = open(workingpath + "//export-log.txt", 'a')
     # Time the export
     time1 = time.clock()
+    date = datetime.datetime.now()
 
-    log_file.write("Started exporting " + filepath + " model\n")
+    log_file.write("Started exporting on" + date.strftime("%d-%m-%Y %H:%M:%S") + "\n" + "File path: " + filepath + "\n")
 
     global_matrix = mathutils.Matrix()
 

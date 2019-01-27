@@ -21,7 +21,7 @@ bl_info = {
     "author": """(Original 3ds plugin): Bob Holcomb, Campbell Barton. 
     (Remake for p3d): Wurunduk""",
     "location": "File > Import-Export",
-    "version": (1, 2, 1),
+    "version": (1, 2, 2),
     "support": 'COMMUNITY',
     "category": "Import-Export"}
 
