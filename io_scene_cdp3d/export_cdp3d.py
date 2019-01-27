@@ -511,7 +511,8 @@ def save(operator,
          use_selection=True,
          enable_corona=False,
          enable_flares=True,
-         enable_environment=True, ):
+         enable_environment=True, 
+         center_objects_to_origin=False, ):
 
     import bpy
     import mathutils
@@ -519,8 +520,8 @@ def save(operator,
     import time
     from bpy_extras.io_utils import create_derived_objects, free_derived_objects
 
+    #get the folder where file will be saved and add a log in that folder
     workingpath = '\\'.join(filepath.split('\\')[0:-1])
-
     log_file = open(workingpath + "//export-log.txt", 'a')
     # Time the export
     time1 = time.clock()
@@ -611,6 +612,7 @@ def save(operator,
             free_derived_objects(ob)
 
 
+    #write all the meshes list into the log, so we can use it when setting up the carinfo.cca
     log_file.write("Meshes: " + meshes_list + "\n")
 
 
@@ -649,6 +651,43 @@ def save(operator,
     length = 0.0
     height = 0.0
     depth = 0.0
+
+    objcenterx = 0.0
+    objcentery = 0.0
+    objcenterz = 0.0
+
+    #we have to get the main meshes dimensions before 
+    #we save all the other meshes, so we could properly center them if needed
+    for ob, blender_mesh, matrix in mesh_objects:
+        if ob.name == "main":
+            v = blender_mesh.vertices[0].co
+            lowx = v[0]
+            highx = v[0]
+            lowy = v[1]
+            highy = v[1]
+            lowz = v[2]
+            highz = v[2]
+
+            for vert in blender_mesh.vertices:
+                pos = vert.co
+                if pos[0] < lowx: lowx = pos[0]
+                elif pos[0] > highx: highx = pos[0]
+
+                if pos[1] < lowy: lowy = pos[1]
+                elif pos[1] > highy: highy = pos[1]
+
+                if pos[2] < lowz: lowz = pos[2]
+                elif pos[2] > highz: highz = pos[2]
+
+            length = highx-lowx
+            height = highz-lowz
+            depth = highy-lowy
+
+            objcenterx = (highx+lowx)/2
+            objcentery = (highy+lowy)/2
+            objcenterz = (highz+lowz)/2
+
+
 
     for ob, blender_mesh, matrix in mesh_objects:
         submesh = _3ds_chunk(sane_name("SUBMESH"))
@@ -694,7 +733,7 @@ def save(operator,
                 log_file.write("! collision mesh was not found, using main mesh for collisions.\n")
         else: flags = flags | 2
 
-        #for some stupid reason these are not used?
+        #for some reason these are not used?
         """if "det_" in ob.name: flags = flags | 16
         if "gls_" in ob.name: flags = flags | 32
         if "plas_" in ob.name: flags = flags | 64
@@ -707,8 +746,6 @@ def save(operator,
 
         submesh.add_variable("name", _3ds_string(sane_name(ob.name)))
         submesh.add_variable("flags", _3ds_uint(flags))
-        pos = ob.matrix_world.to_translation()
-        submesh.add_variable("pos", _3ds_point_3d((pos[0], pos[2], pos[1])))
 
         v = blender_mesh.vertices[0].co
         lowx = v[0]
@@ -719,6 +756,7 @@ def save(operator,
         highz = v[2]
 
         vertices = _3ds_array()
+        #find dimensions of every mesh
         for vert in blender_mesh.vertices:
             pos = vert.co
             if pos[0] < lowx: lowx = pos[0]
@@ -730,13 +768,22 @@ def save(operator,
             if pos[2] < lowz: lowz = pos[2]
             elif pos[2] > highz: highz = pos[2]
 
-            vertices.add(_3ds_point_3d( (pos[0], pos[2], pos[1]) ))
+        #construct vertices array
+        for vert in blender_mesh.vertices:
+            pos = vert.co
+            if(center_objects_to_origin == True):
+                vertices.add(_3ds_point_3d( (pos[0] - (highx+lowx)/2, pos[2] - (highz+lowz)/2, pos[1] - (highy+lowy)/2) ))
+            else:
+                vertices.add(_3ds_point_3d( (pos[0], pos[2], pos[1]) ))
 
-        if ob.name == "main":
-            length = highx-lowx
-            height = highz-lowz
-            depth = highy-lowy
+        #construct mesh positions array
+        pos = ob.matrix_world.to_translation()
+        if(center_objects_to_origin == True):
+            submesh.add_variable("pos", _3ds_point_3d(((highx+lowx)/2 - objcenterx, (highz+lowz)/2 - objcenterz, (highy+lowy)/2 - objcentery)))
+        else:
+            submesh.add_variable("pos", _3ds_point_3d((pos[0], pos[2], pos[1])))
 
+        #save mesh dimensions
         submesh.add_variable("Length", _3ds_float(highx-lowx))
         submesh.add_variable("Height", _3ds_float(highz-lowz))
         submesh.add_variable("Depth", _3ds_float(highy-lowy))

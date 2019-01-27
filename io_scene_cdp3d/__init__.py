@@ -21,7 +21,7 @@ bl_info = {
     "author": """(Original 3ds plugin): Bob Holcomb, Campbell Barton. 
     (Remake for p3d): Wurunduk""",
     "location": "File > Import-Export",
-    "version": (1, 0),
+    "version": (1, 2, 1),
     "support": 'COMMUNITY',
     "category": "Import-Export"}
 
@@ -119,6 +119,13 @@ class ExportP3D(bpy.types.Operator, ExportHelper):
     enable_environment = BoolProperty(
             name = "Light up environment",
             description="Static lamps will light up environemnt around",
+            default=True,
+            )
+
+    center_objects_to_origin = BoolProperty(
+            name = "Center object verticies to origin",
+            description = """Moves every vertex so the center of the mesh will be the same at 0,0,0\n
+            This is the default behaviour of makep3d. If you have any physics bugs in-game, check this""",
             default=True,
             )
 
