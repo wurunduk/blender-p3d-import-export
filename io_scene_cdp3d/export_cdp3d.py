@@ -63,7 +63,7 @@ class _3ds_byte(object):
 
     def write(self, file):
         k = self.value
-        file.write(struct.pack("<b", k))
+        file.write(struct.pack("<B", k))
 
     def __str__(self):
         return str(self.value)
@@ -631,24 +631,6 @@ def save(operator,
     lights = _3ds_chunk(sane_name("LIGHTS"))
     lights_array = _3ds_array()
 
-    for l in lamp_objects:
-        lamp = _3ds_unnamed_chunk()
-        lamp.add_variable("name", _3ds_string(sane_name(l.name)))
-        pos = l.matrix_world.to_translation()
-        lamp.add_variable("pos", _3ds_point_3d((pos[0], pos[2], pos[1])))
-        lamp.add_variable("range", _3ds_float(l.data.energy))
-        lamp.add_variable("color", _3ds_uint(int('%02x%02x%02x' % (int(l.data.color[0]*255), int(l.data.color[1]*255), int(l.data.color[2]*255)), 16)))
-
-        lamp.add_variable("corona", _3ds_byte(int(enable_corona)))
-        lamp.add_variable("flares", _3ds_byte(int(enable_flares)))
-        lamp.add_variable("environment", _3ds_byte(int(enable_environment)))
-        lights_array.add(lamp)
-
-    lights.add_variable("lights", lights_array)
-
-
-    meshes = _3ds_chunk(sane_name("MESHES"))
-    meshes_array = _3ds_array()
 
     length = 0.0
     height = 0.0
@@ -690,6 +672,27 @@ def save(operator,
             objcenterz = (highz+lowz)/2
 
 
+    for l in lamp_objects:
+        lamp = _3ds_unnamed_chunk()
+        lamp.add_variable("name", _3ds_string(sane_name(l.name)))
+        pos = l.matrix_world.to_translation()
+        if(center_objects_to_origin == True):
+            lamp.add_variable("pos", _3ds_point_3d( (pos[0] - objcenterx, pos[2] - objcenterz, pos[1] - objcentery) ))
+        else:
+            lamp.add_variable("pos", _3ds_point_3d((pos[0], pos[2], pos[1])))
+        lamp.add_variable("range", _3ds_float(l.data.energy))
+        lamp.add_variable("color", _3ds_uint(int('%02x%02x%02x' % (int(l.data.color[0]*255), int(l.data.color[1]*255), int(l.data.color[2]*255)), 16)))
+
+        lamp.add_variable("corona", _3ds_byte(int(enable_corona)))
+        lamp.add_variable("flares", _3ds_byte(int(enable_flares)))
+        lamp.add_variable("environment", _3ds_byte(int(enable_environment)))
+        lights_array.add(lamp)
+
+    lights.add_variable("lights", lights_array)
+
+
+    meshes = _3ds_chunk(sane_name("MESHES"))
+    meshes_array = _3ds_array()
 
     for ob, blender_mesh, matrix in mesh_objects:
         submesh = _3ds_chunk(sane_name("SUBMESH"))
@@ -709,13 +712,13 @@ def save(operator,
             n = materials_list.index(blender_mesh.materials[tri.mat].name)
             material_size[n] += 1
 
-            poly.add_variable("p1", _3ds_short(tri.vertex_index[0]))
+            poly.add_variable("p1", _3ds_ushort(tri.vertex_index[0]))
             poly.add_variable("uv1", _3ds_point_uv(tri.faceuvs[0]))
 
-            poly.add_variable("p2", _3ds_short(tri.vertex_index[2]))
+            poly.add_variable("p2", _3ds_ushort(tri.vertex_index[2]))
             poly.add_variable("uv2", _3ds_point_uv(tri.faceuvs[2]))
 
-            poly.add_variable("p3", _3ds_short(tri.vertex_index[1]))
+            poly.add_variable("p3", _3ds_ushort(tri.vertex_index[1]))
             poly.add_variable("uv3", _3ds_point_uv(tri.faceuvs[1]))
 
             polys.add(poly)
@@ -792,13 +795,13 @@ def save(operator,
 
         s = 0
         for i in range(len(materials_list)):
-            submesh.add_variable("texstart", _3ds_short(s))
-            submesh.add_variable("numflat", _3ds_short(0))
-            submesh.add_variable("numflatmetal", _3ds_short(0))
-            submesh.add_variable("gourad", _3ds_short(material_size[i]))
-            submesh.add_variable("gouradmetal", _3ds_short(0))
-            submesh.add_variable("gouradmetalenv", _3ds_short(0))
-            submesh.add_variable("shining", _3ds_short(0))
+            submesh.add_variable("texstart", _3ds_ushort(s))
+            submesh.add_variable("numflat", _3ds_ushort(0))
+            submesh.add_variable("numflatmetal", _3ds_ushort(0))
+            submesh.add_variable("gourad", _3ds_ushort(material_size[i]))
+            submesh.add_variable("gouradmetal", _3ds_ushort(0))
+            submesh.add_variable("gouradmetalenv", _3ds_ushort(0))
+            submesh.add_variable("shining", _3ds_ushort(0))
             s += material_size[i]
 
 
