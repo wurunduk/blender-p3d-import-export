@@ -18,10 +18,10 @@
 
 bl_info = {
     "name": "Crashday p3d format",
-    "author": """(Original 3ds plugin): Bob Holcomb, Campbell Barton. 
-    (Remake for p3d): Wurunduk""",
+    "author": "Wurunduk",
+    "blender": (2, 80, 0),
     "location": "File > Import-Export",
-    "version": (1, 3, 0),
+    "version": (2, 0, 0),
     "support": 'COMMUNITY',
     "category": "Import-Export"}
 
@@ -47,82 +47,79 @@ from bpy_extras.io_utils import (
 
 
 
-class ImportP3D(bpy.types.Operator, ImportHelper):
+class ImportCDP3D(bpy.types.Operator, ImportHelper):
     bl_idname = "import_scene.crashday_p3d"
     bl_label = 'Import P3D'
     bl_options = {'UNDO'}
 
     filename_ext = ".p3d"
-    filter_glob = StringProperty(default="*.p3d", options={'HIDDEN'})
+    filter_glob: StringProperty(default="*.p3d", options={'HIDDEN'})
 
-    constrain_size = FloatProperty(
-            name="Size Constraint",
-            description="Scale the model by 10 until it reaches the "
-                        "size constraint (0 to disable)",
-            min=0.0, max=1000.0,
-            soft_min=0.0, soft_max=1000.0,
-            default=10.0,
-            )
-    use_image_search = BoolProperty(
-            name="Image Search",
-            description="Search subdirectories for any associated images "
-                        "(Warning, may be slow)",
-            default=True,
-            )
-    use_apply_transform = BoolProperty(
-            name="Apply Transform",
-            description="Workaround for object transformations "
-                        "importing incorrectly",
-            default=True,
-            )
+    cd_path: StringProperty(
+        name="Path to general texture folder",
+        description="If provided plugin will auto load textures from this folder"
+    )
+
+    car_path: StringProperty(
+        name="Path to a car texture folder",
+        description="If provided plugin will auto load textures from this folder"
+    )
+
+    cd_path_mod: StringProperty(
+        name="Path to general texture folder of the mod",
+        description="If provided plugin will auto load textures from this folder"
+    )
+
+    car_path_mod: StringProperty(
+        name="Path to car texture folder of the mod",
+        description="If provided plugin will auto load textures from this folder"
+    )
 
     def execute(self, context):
         from . import import_cdp3d
-
         keywords = self.as_keywords(ignore=("axis_forward",
                                             "axis_up",
                                             "filter_glob",
                                             ))
 
-
         return import_cdp3d.load(self, context, **keywords)
 
 
-class ExportP3D(bpy.types.Operator, ExportHelper):
+class ExportCDP3D(bpy.types.Operator, ExportHelper):
     bl_idname = "export_scene.crashday_p3d"
     bl_label = 'Export P3D'
 
     filename_ext = ".p3d"
-    filter_glob = StringProperty(
+    filter_glob:StringProperty(
             default="*.p3d",
             options={'HIDDEN'},
             )
 
-    use_selection = BoolProperty(
+    use_selection: BoolProperty(
             name="Selection Only",
             description="Export selected objects only",
             default=False,
             )
 
-    enable_corona = BoolProperty(
+    enable_corona: BoolProperty(
             name = "Enable corona",
             description="Enables corona effect for every exported lamp",
             default=False,
             )
 
-    enable_flares = BoolProperty(
+    enable_flares: BoolProperty(
             name = "Enable lens flares",
             description="Enables lens flares for every exported lamp",
             default=True,
             )
 
-    enable_environment = BoolProperty(
+    enable_environment: BoolProperty(
             name = "Light up environment",
             description="Static lamps will light up environemnt around",
             default=True,
             )
 
-    center_objects_to_origin = BoolProperty(
+    center_objects_to_origin: BoolProperty(
             name = "Center object verticies to origin",
             description = """Moves every vertex so the center of the mesh will be the same at 0,0,0\n
             This is the default behaviour of makep3d. If you have any physics bugs in-game, check this""",
@@ -143,25 +140,27 @@ class ExportP3D(bpy.types.Operator, ExportHelper):
 
 # Add to a menu
 def menu_func_export(self, context):
-    self.layout.operator(ExportP3D.bl_idname, text="CrashDay (.p3d)")
+    self.layout.operator(ExportCDP3D.bl_idname, text="Crashday (.p3d)")
 
 
 def menu_func_import(self, context):
-    self.layout.operator(ImportP3D.bl_idname, text="CrashDay (.p3d)")
+    self.layout.operator(ImportCDP3D.bl_idname, text="Crashday (.p3d)")
 
 
 def register():
-    bpy.utils.register_module(__name__)
+    bpy.utils.register_class(ExportCDP3D)
+    bpy.utils.register_class(ImportCDP3D)
 
-    #bpy.types.INFO_MT_file_import.append(menu_func_import)
-    bpy.types.INFO_MT_file_export.append(menu_func_export)
+    bpy.types.TOPBAR_MT_file_import.append(menu_func_import)
+    bpy.types.TOPBAR_MT_file_export.append(menu_func_export)
 
 
 def unregister():
-    bpy.utils.unregister_module(__name__)
+    bpy.utils.unregister_class(ExportCDP3D)
+    bpy.utils.unregister_class(ImportCDP3D)
 
-    #bpy.types.INFO_MT_file_import.remove(menu_func_import)
-    bpy.types.INFO_MT_file_export.remove(menu_func_export)
+    bpy.types.TOPBAR_MT_file_import.remove(menu_func_import)
+    bpy.types.TOPBAR_MT_file_export.remove(menu_func_export)
 
 if __name__ == "__main__":
     register()

@@ -8,6 +8,18 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 ### Changed
 ### Fixed
 
+## [1.4.0] - 2020-07-03
+- This update is a complete rewrite of the plugin for blender version 2.83.
+### Added
+- Added p3d model import
+### Changed
+### Fixed
+
+## [1.3.1] - 2019-06-23
+### Added
+- Fixed lights not being centered on export
+- Fixed wrong limits for the poly and texture amounts(thanks to Mica for reporting).
+
 ## [1.3.0] - 2019-01-27
 ### Added
 - Meshes can now be autocentered to behave like makep3d would
@@ -19,7 +31,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 
 ## [1.2.0] - 2018-11-14
 ### Added
-- export-log.txt file will be created on evry export in the same folder as the export path. This logs contains info about export process and includes list of all meshes ready for carinfo.cca
+- export-log.txt file will be created on every export in the same folder as the export path. This logs contains info about export process and includes list of all meshes ready for carinfo.cca
 ### Fixed
 - Collision and Trace flags are now correctly set on export, so CD should not crash when trying to load LOD's or other stuff.
 
