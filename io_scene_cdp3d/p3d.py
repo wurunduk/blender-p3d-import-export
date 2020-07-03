@@ -4,6 +4,9 @@ from enum import Enum
 def int_to_color(value):
     return (((value >> 16) & 255)/255.0, ((value >> 8) & 255)/255.0, (value & 255)/255.0)
 
+def color_to_int(value):
+    return int('%02x%02x%02x' % (int(value[0]*255), int(value[1]*255), int(value[2]*255)), 16)
+
 class P3DMaterial(Enum):
     FLAT = 0,
     FLAT_METAL = 1,
@@ -28,7 +31,7 @@ class P3DTextureInfo:
             self.num_shining)
 
 class P3DLight:
-    name = ""
+    name = ''
     pos = [0.0, 0.0, 0.0]
     range = 1.0
     color = 255
@@ -38,7 +41,7 @@ class P3DLight:
     Lightup_environment = True
 
     def __str__(self):
-        formated_pos = ["{0:0.2f}".format(i) for i in self.pos]
+        formated_pos = ['{0:0.2f}'.format(i) for i in self.pos]
         return '''{}\nrange: {:.2f} color: {}\ncorona {} flares {} environment {}\npos: {}\n'''.format(
             self.name[0] if type(self.name) is tuple else self.name, 
             self.range, int_to_color(self.color), 
@@ -47,7 +50,7 @@ class P3DLight:
         )
 
 class P3DPolygon:
-    texture = ""
+    texture = ''
     material = 0
 
     p1 = 0
@@ -63,10 +66,10 @@ class P3DPolygon:
     v3 = 0.0
 
     def __str__(self):
-        return str(self.__class__) + ": " + str(self.__dict__)
+        return str(self.__class__) + ': ' + str(self.__dict__)
 
 class P3DMesh:
-    name = ""
+    name = ''
     flags = 0
     pos = [0.0, 0.0, 0.0]
 
@@ -86,9 +89,10 @@ class P3DMesh:
     polys = []
 
     def __str__(self):
-        formated_pos = ["{0:0.2f}".format(i) for i in self.pos]
-        # for p in self.polys:
-        #     print(p)
+        formated_pos = ['{0:0.2f}'.format(i) for i in self.pos]
+        if self.name == 'det_rb1':
+            for i in self.texture_infos:
+                print(i)
         return '''{}\nflags: {} vertices: {} polys: {}
 pos: {}\nsize: {:.2f} {:.2f} {:.2f} \n'''.format(
             self.name[0] if type(self.name) is tuple else self.name, 
@@ -112,21 +116,21 @@ class P3D:
     meshes = []
 
     user_data_size = 0
-    user_data = ""
+    user_data = ''
 
     def __str__(self):
-        print("\n{} textures:".format(self.num_textures))
+        print('\n{} textures:'.format(self.num_textures))
         for i in self.textures:
             print(i[0] if type(i) is tuple else i)
 
-        print("\n{} lights:".format(self.num_lights))
+        print('\n{} lights:'.format(self.num_lights))
         for i in self.lights:
             print(i)
         
-        print("\n{} meshes:".format(self.num_meshes))
+        print('\n{} meshes:'.format(self.num_meshes))
         for i in self.meshes:
             print(i)
-        return "model size: {:.2f} {:.2f} {:.2f}\n{} lights, {} meshes, {} textures\n".format(self.length, self.height, self.depth, self.num_lights, self.num_meshes, self.num_textures)
+        return 'model size: {:.2f} {:.2f} {:.2f}\n{} lights, {} meshes, {} textures\n'.format(self.length, self.height, self.depth, self.num_lights, self.num_meshes, self.num_textures)
 
     def load(self, file):
         file.read(4)
@@ -139,7 +143,7 @@ class P3D:
         self.num_textures = read_byte(file)
         self.textures = []
         for i in range(self.num_textures):
-            self.textures.append("")
+            self.textures.append('')
             self.textures[i] = read_null_string(file)
 
         #lights list
@@ -263,24 +267,24 @@ class P3D:
         self.user_data_size = read_int(file)
 
     def save(self, file):
-        write_string(file, b"P3D2")
+        write_string(file, b'P3D\x02')
         write_float(file, self.length)
         write_float(file, self.height)
         write_float(file, self.depth)
 
         #texture list
-        write_string(file, b"TEX")
+        write_string(file, b'TEX')
         write_uint(file, 1337)
         write_byte(file, self.num_textures)
         for i in range(self.num_textures):
-            write_null_string(file, sanitise_string(self.textures[i]))
+            write_null_string(file, sanitise_string(self.textures[i].lower()))
 
         #lights list
-        write_string(file, b"LIGHTS")
+        write_string(file, b'LIGHTS')
         write_uint(file, 1337)
         write_short(file, self.num_lights)
         for i in range(self.num_lights):
-            write_null_string(file, sanitise_string(self.lights[i].name))
+            write_null_string(file, sanitise_string(self.lights[i].name.lower()))
             write_vector(file, self.lights[i].pos)
             write_float(file, self.lights[i].range)
             write_int(file, self.lights[i].color)
@@ -290,13 +294,13 @@ class P3D:
             write_byte(file, self.lights[i].Lightup_environment)
 
         #meshes list
-        write_string(file, b"MESHES")
+        write_string(file, b'MESHES')
         write_uint(file, 1337)
         write_short(file, self.num_meshes)
         for i in range(self.num_meshes):
-            write_string(file, b"SUBMESH")
+            write_string(file, b'SUBMESH')
             write_uint(file, 1337)
-            write_null_string(file, sanitise_string(self.meshes[i].name))
+            write_null_string(file, sanitise_string(self.meshes[i].name.lower()))
 
             write_uint(file, self.meshes[i].flags)
             write_vector(file, self.meshes[i].pos)
@@ -333,7 +337,7 @@ class P3D:
                 write_float(file, 1.0 - self.meshes[i].polys[p].v2)
 
 
-        write_string(file, b"USER")
+        write_string(file, b'USER')
         write_uint(file, 1337)
         write_int(file, 0)
             

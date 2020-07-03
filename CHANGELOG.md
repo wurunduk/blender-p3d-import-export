@@ -8,12 +8,21 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 ### Changed
 ### Fixed
 
+## [1.4.1] - 202-07-04
+### Added
+- Added support for p3d in-file material type
+- Exporter now applies object scaling to the exported model
+- Exporter will now auto lower case names for the p3d file
+- Empty objects are now ignored on export
+- Added lower and upper bounds move option on export
+### Changed
+- Models are now imported into collections with the name of the loaded model
+### Fixed
+
 ## [1.4.0] - 2020-07-03
 - This update is a complete rewrite of the plugin for blender version 2.83.
 ### Added
 - Added p3d model import
-### Changed
-### Fixed
 
 ## [1.3.1] - 2019-06-23
 ### Added

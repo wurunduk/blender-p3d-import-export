@@ -19,9 +19,9 @@
 bl_info = {
     "name": "Crashday p3d format",
     "author": "Wurunduk",
-    "blender": (2, 80, 0),
+    "blender": (2, 83, 0),
     "location": "File > Import-Export",
-    "version": (2, 0, 0),
+    "version": (1, 4, 1),
     "support": 'COMMUNITY',
     "category": "Import-Export"}
 
@@ -119,10 +119,19 @@ class ExportCDP3D(bpy.types.Operator, ExportHelper):
             default=True,
             )
 
-    center_objects_to_origin: BoolProperty(
-            name = "Center object verticies to origin",
-            description = """Moves every vertex so the center of the mesh will be the same at 0,0,0\n
-            This is the default behaviour of makep3d. If you have any physics bugs in-game, check this""",
+    lower_top_bound: FloatProperty(
+            name = "Lower top bound",
+            default = 0.0,
+    )
+
+    lift_bottom_bound: FloatProperty(
+            name = "Lift bottom bound",
+            default = 0.0,
+    )
+
+    export_log: BoolProperty(
+            name = "Export log",
+            description = "Create a log file of export process with useful data",
             default=True,
             )
 

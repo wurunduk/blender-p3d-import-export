@@ -20,9 +20,9 @@ import os
 import time
 import struct
 
-if "bpy" in locals():
+if 'bpy' in locals():
     import importlib
-    if "p3d" in locals():
+    if 'p3d' in locals():
         importlib.reload(p3d)
 
 import bpy
@@ -31,8 +31,8 @@ from . import p3d
 def texture_exists(full_path, file_name):
     #remove extension and add to path
     p = os.path.join(full_path, os.path.splitext(file_name)[0])
-    tga_path = p + ".tga"
-    dds_path = p + ".dds"
+    tga_path = p + '.tga'
+    dds_path = p + '.dds'
     if os.path.isfile(tga_path):
         print('Loaded tga in {}'.format(tga_path))
         return tga_path
@@ -59,19 +59,19 @@ def add_textures(p3d_model, paths):
 
 def get_material_name(type_name):
     t = type_name[0]
-    s = ""
+    s = ''
     if t == p3d.P3DMaterial.FLAT:
-        s = "f_"
+        s = 'f_'
     elif t == p3d.P3DMaterial.FLAT_METAL:
-        s = "fm_"
+        s = 'fm_'
     elif t == p3d.P3DMaterial.GOURAUD:
-        s = "g_"
+        s = 'g_'
     elif t == p3d.P3DMaterial.GOURAUD_METAL:
-        s = "gm_"
+        s = 'gm_'
     elif t == p3d.P3DMaterial.GOURAUD_METAL_ENV:
-        s = "gme_"
+        s = 'gme_'
     elif t == p3d.P3DMaterial.SHINING:
-        s = "s_"
+        s = 's_'
     return s + type_name[1]
 
 def add_material(obj, material_name):
@@ -115,18 +115,16 @@ def add_material(obj, material_name):
 
     obj.data.materials.append(material)
 
-def create_meshes(p3d_model):
-    col = bpy.data.collections.get("Collection")
-
+def create_meshes(p3d_model, col):
     for m in p3d_model.meshes:
         mesh = bpy.data.meshes.new(name=m.name)
         obj = bpy.data.objects.new(mesh.name, mesh)
         obj.location = m.pos
 
-        #if "coll" in m.name or "shad" in m.name or "lod" in m.name or "." in m.name:
-        #    obj.hide_viewport = True
-
         col.objects.link(obj)
+
+        # if "coll" in m.name or "shad" in m.name or "lod" in m.name or "." in m.name:
+        #     obj.hide_set(True)
 
         for t in m.materials_used:
             add_material(obj, t)
@@ -143,16 +141,14 @@ def create_meshes(p3d_model):
         mesh.from_pydata(m.vertices, [], faces)
 
         for i, f in enumerate(mesh.polygons):
-            f.material_index = [j for j, item in enumerate(m.materials_used) if item[1] == m.polys[i].texture][0]
+            f.material_index = [j for j, item in enumerate(m.materials_used) if item[1] == m.polys[i].texture and item[0] == m.polys[i].material][0]
 
         uv_layer = mesh.uv_layers.new(do_init=False)
         mesh.uv_layers.active = uv_layer
 
-        uv_layer.data.foreach_set("uv", [uv for pair in [uvs[i] for i, l in enumerate(mesh.loops)] for uv in pair])
+        uv_layer.data.foreach_set('uv', [uv for pair in [uvs[i] for i, l in enumerate(mesh.loops)] for uv in pair])
 
-def create_lights(p3d_model):
-    col = bpy.data.collections.get("Collection")
-
+def create_lights(p3d_model, col):
     for l in p3d_model.lights:
         new_light = bpy.data.lights.new(name=l.name, type='POINT')
         new_light.color = p3d.int_to_color(l.color)
@@ -165,11 +161,13 @@ def create_lights(p3d_model):
 
 def load(operator,
          context,
-         filepath="",
-         cd_path="", car_path="",
-         cd_path_mod="", car_path_mod=""):
+         filepath='',
+         cd_path='', car_path='',
+         cd_path_mod='', car_path_mod=''):
 
-    print("\nImporting file {}".format(filepath))
+    file_name = filepath.split('\\')[-1]
+
+    print('\nImporting file {} from {}'.format(file_name, filepath))
 
     search_path = []
     if os.path.exists(cd_path):
@@ -181,18 +179,19 @@ def load(operator,
     if os.path.exists(car_path_mod):
         search_path.append(car_path_mod)
 
+    p = p3d.P3D()
 
     file = open(filepath, 'rb')
-    file2 = open(filepath + "1", "wb")
-    p = p3d.P3D()
     p.load(file)
-    p.save(file2)
-    print(p)
     file.close()
-    file2.close
+
+    print(p)
+
+    col = bpy.data.collections.new(file_name) 
+    bpy.context.scene.collection.children.link(col)
 
     add_textures(p, search_path)
-    create_lights(p)
-    create_meshes(p)
+    create_lights(p, col)
+    create_meshes(p, col)
 
     return {'FINISHED'}

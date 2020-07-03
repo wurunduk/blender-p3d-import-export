@@ -18,843 +18,302 @@
 
 import struct
 import datetime
-
-
-name_unique = []  # stores str, ascii only
-name_mapping = {}  # stores {orig: byte} mapping
-
-
-def sane_name(name):
-    name_fixed = name_mapping.get(name)
-    if name_fixed is not None:
-        return name_fixed
-
-    # strip non ascii chars
-    new_name_clean = new_name = name.encode("ASCII", "replace").decode("ASCII")
-    i = 0
-
-    while new_name in name_unique:
-        new_name = new_name_clean + ".%.3d" % i
-        i += 1
-
-    # note, appending the 'str' version.
-    name_unique.append(new_name)
-    name_mapping[name] = new_name = new_name.encode("ASCII", "replace")
-    return new_name
-
-def uv_key(uv):
-    return round(uv[0], 6), round(1.0-uv[1], 6)
-
-# size defines:
-SZ_BYTE = 1
-SZ_SHORT = 2
-SZ_INT = 4
-SZ_FLOAT = 4
-
-class _3ds_byte(object):
-    """Class representing a byte"""
-    __slots__ = ("value", )
-
-    def __init__(self, val=0):
-        self.value = val
-
-    def get_size(self):
-        return SZ_BYTE
-
-    def write(self, file):
-        k = self.value
-        file.write(struct.pack("<B", k))
-
-    def __str__(self):
-        return str(self.value)
-
-
-class _3ds_short(object):
-    """Class representing a short (2-byte integer)"""
-    __slots__ = ("value", )
-
-    def __init__(self, val=0):
-        self.value = val
-
-    def get_size(self):
-        return SZ_SHORT
-
-    def write(self, file):
-        file.write(struct.pack("<h", self.value))
-
-    def __str__(self):
-        return str(self.value)
-
-
-
-class _3ds_ushort(object):
-    """Class representing an unsgined short (2-byte integer)"""
-    __slots__ = ("value", )
-
-    def __init__(self, val=0):
-        self.value = val
-
-    def get_size(self):
-        return SZ_SHORT
-
-    def write(self, file):
-        file.write(struct.pack("<H", self.value))
-
-    def __str__(self):
-        return str(self.value)
-
-
-class _3ds_uint(object):
-    """Class representing an int (4-byte integer)"""
-    __slots__ = ("value", )
-
-    def __init__(self, val):
-        self.value = val
-
-    def get_size(self):
-        return SZ_INT
-
-    def write(self, file):
-        file.write(struct.pack("<I", self.value))
-
-    def __str__(self):
-        return str(self.value)
-
-
-class _3ds_float(object):
-    """Class representing a 4-byte IEEE floating point number"""
-    __slots__ = ("value", )
-
-    def __init__(self, val):
-        self.value = val
-
-    def get_size(self):
-        return SZ_FLOAT
-
-    def write(self, file):
-        file.write(struct.pack("<f", self.value))
-
-    def __str__(self):
-        return str(self.value)
-
-
-class _3ds_string(object):
-    """Class representing a zero-terminated string"""
-    __slots__ = ("value", )
-
-    def __init__(self, val):
-        assert(type(val) == bytes)
-        self.value = val
-
-    def get_size(self):
-        return (len(self.value) + 1)
-
-    def write(self, file):
-        binary_format = "<%ds" % (len(self.value) + 1)
-        file.write(struct.pack(binary_format, self.value))
-
-    def __str__(self):
-        return self.value
-
-
-class _3ds_stringtag(object):
-    """Class representing a zero-terminated string"""
-    __slots__ = ("value", )
-    def __init__(self, val):
-        assert(type(val) == bytes)
-        self.value = val
-
-    def get_size(self):
-        return (len(self.value))
-
-    def write(self, file):
-        binary_format = "<%ds" % (len(self.value))
-        file.write(struct.pack(binary_format, self.value))
-
-    def __str__(self):
-        return self.value
-
-
-class _3ds_point_3d(object):
-    """Class representing a three-dimensional point"""
-    __slots__ = "x", "y", "z"
-
-    def __init__(self, point):
-        self.x, self.y, self.z = point
-
-    def get_size(self):
-        return 3 * SZ_FLOAT
-
-    def write(self, file):
-        file.write(struct.pack('<3f', self.x, self.y, self.z))
-
-    def __str__(self):
-        return '(%f, %f, %f)' % (self.x, self.y, self.z)
-
-
-class _3ds_point_uv(object):
-    """Class representing a UV-coordinate"""
-    __slots__ = ("uv", )
-
-    def __init__(self, point):
-        self.uv = point
-
-    def get_size(self):
-        return 2 * SZ_FLOAT
-
-    def write(self, file):
-        data = struct.pack('<2f', self.uv[0], self.uv[1])
-        file.write(data)
-
-    def __str__(self):
-        return '(%g, %g)' % self.uv
-
-
-class _3ds_array(object):
-    """Class representing an array of variables
-
-    Consists of a _3ds_ushort to indicate the number of items, followed by the items themselves.
-    """
-    __slots__ = "values", "size"
-
-    def __init__(self):
-        self.values = []
-        self.size = SZ_SHORT
-
-    # add an item:
-    def add(self, item):
-        self.values.append(item)
-        self.size += item.get_size()
-
-    def get_size(self):
-        return self.size
-
-    def validate(self):
-        return len(self.values) <= 65535
-
-    def write(self, file):
-        _3ds_ushort(len(self.values)).write(file)
-        for value in self.values:
-            value.write(file)
-
-    # To not overwhelm the output in a dump, a _3ds_array only
-    # outputs the number of items, not all of the actual items.
-    def __str__(self):
-        return '(%d items)' % len(self.values)
-
-
-class _3ds_bytearray(object):
-    """Class representing an array of variables
-
-    Consists of a _3ds_byte to indicate the number of items, followed by the items themselves.
-    """
-    __slots__ = "values", "size"
-
-    def __init__(self):
-        self.values = []
-        self.size = SZ_BYTE
-
-    # add an item:
-    def add(self, item):
-        self.values.append(item)
-        self.size += item.get_size()
-
-    def get_size(self):
-        return self.size
-
-    def validate(self):
-        return len(self.values) <= 255
-
-    def write(self, file):
-        _3ds_byte(len(self.values)).write(file)
-        for value in self.values:
-            value.write(file)
-
-    # To not overwhelm the output in a dump, a _3ds_array only
-    # outputs the number of items, not all of the actual items.
-    def __str__(self):
-        return '(%d items)' % len(self.values)
-
-
-class _3ds_named_variable(object):
-    """Convenience class for named variables."""
-
-    __slots__ = "value", "name"
-
-    def __init__(self, name, val=None):
-        self.name = name
-        self.value = val
-
-    def get_size(self):
-        if self.value is None:
-            return 0
-        else:
-            return self.value.get_size()
-
-    def write(self, file):
-        if self.value is not None:
-            self.value.write(file)
-
-    def dump(self, indent):
-        if self.value is not None:
-            print(indent * " ",
-                  self.name if self.name else "[unnamed]",
-                  " = ",
-                  self.value)
-
-
-#the chunk class
-class _3ds_chunk(object):
-    """Class representing a chunk
-
-    Chunks contain zero or more variables, followed by zero or more subchunks.
-    """
-    __slots__ = "ID", "size", "variables", "subchunks", "write_size"
-
-    def __init__(self, chunk_id="", write_size = True):
-        self.ID = _3ds_stringtag(chunk_id)
-        self.size = _3ds_uint(0)
-        self.variables = []
-        self.subchunks = []
-        self.write_size = write_size
-
-    def add_variable(self, name, var):
-        """Add a named variable.
-
-        The name is mostly for debugging purposes."""
-        self.variables.append(_3ds_named_variable(name, var))
-
-    def add_subchunk(self, chunk):
-        """Add a subchunk."""
-        self.subchunks.append(chunk)
-
-    def get_size(self):
-        """Calculate the size of the chunk and return it.
-
-        The sizes of the variables and subchunks are used to determine this chunk\'s size."""
-        tmpsize = 0
-        for variable in self.variables:
-            tmpsize += variable.get_size()
-        for subchunk in self.subchunks:
-            tmpsize += subchunk.get_size()
-        self.size.value = tmpsize
-        return self.size.value + self.ID.get_size() + self.size.get_size()
-
-    def validate(self):
-        for var in self.variables:
-            func = getattr(var.value, "validate", None)
-            if (func is not None) and not func():
-                return False
-
-        for chunk in self.subchunks:
-            func = getattr(chunk, "validate", None)
-            if (func is not None) and not func():
-                return False
-
-        return True
-
-    def write(self, file):
-        """Write the chunk to a file.
-
-        Uses the write function of the variables and the subchunks to do the actual work."""
-        #write header
-        self.ID.write(file)
-        if (self.write_size): 
-            self.size.write(file)
-        for variable in self.variables:
-            variable.write(file)
-        for subchunk in self.subchunks:
-            subchunk.write(file)
-
-    def dump(self, indent=0):
-        """Write the chunk to a file.
-
-        Dump is used for debugging purposes, to dump the contents of a chunk to the standard output.
-        Uses the dump function of the named variables and the subchunks to do the actual work."""
-        print(indent * " ",
-              "ID=%r" % hex(self.ID.value),
-              "size=%r" % self.get_size())
-        for variable in self.variables:
-            variable.dump(indent + 1)
-        for subchunk in self.subchunks:
-            subchunk.dump(indent + 1)
-
-
-
-class _3ds_unnamed_chunk(object):
-    """Class representing a chunk, but does not print name or size when written
-
-    Chunks contain zero or more variables, followed by zero or more subchunks.
-    """
-    __slots__ = "variables", "subchunks"
-
-    def __init__(self, chunk_id=""):
-        self.variables = []
-        self.subchunks = []
-
-    def add_variable(self, name, var):
-        """Add a named variable.
-
-        The name is mostly for debugging purposes."""
-        self.variables.append(_3ds_named_variable(name, var))
-
-    def add_subchunk(self, chunk):
-        """Add a subchunk."""
-        self.subchunks.append(chunk)
-
-    def get_size(self):
-        """Calculate the size of the chunk and return it.
-
-        The sizes of the variables and subchunks are used to determine this chunk\'s size."""
-        tmpsize = 0
-        for variable in self.variables:
-            tmpsize += variable.get_size()
-        for subchunk in self.subchunks:
-            tmpsize += subchunk.get_size()
-        return tmpsize
-
-    def validate(self):
-        for var in self.variables:
-            func = getattr(var.value, "validate", None)
-            if (func is not None) and not func():
-                return False
-
-        for chunk in self.subchunks:
-            func = getattr(chunk, "validate", None)
-            if (func is not None) and not func():
-                return False
-
-        return True
-
-    def write(self, file):
-        """Write the chunk to a file.
-
-        Uses the write function of the variables and the subchunks to do the actual work."""
-        #write header
-        for variable in self.variables:
-            variable.write(file)
-        for subchunk in self.subchunks:
-            subchunk.write(file)
-
-    def dump(self, indent=0):
-        """Write the chunk to a file.
-
-        Dump is used for debugging purposes, to dump the contents of a chunk to the standard output.
-        Uses the dump function of the named variables and the subchunks to do the actual work."""
-        for variable in self.variables:
-            variable.dump(indent + 1)
-        for subchunk in self.subchunks:
-            subchunk.dump(indent + 1)
-
-
-######################################################
-# EXPORT
-######################################################
-
-class tri_wrapper(object):
-    """Class representing a face."""
-    __slots__ = "vertex_index", "mat", "image", "faceuvs", "offset"
-
-    def __init__(self, vindex=(0, 0, 0), mat=None, faceuvs=None):
-        self.vertex_index = vindex
-        self.mat = mat
-        self.faceuvs = faceuvs
-        self.offset = [0, 0, 0]
-
-
-def extract_triangles(mesh, materials_list):
-    """Extract triangles from a mesh.
-
-    If the mesh contains quads, they will be split into triangles."""
-    tri_list = []
-    do_uv = bool(mesh.tessface_uv_textures)
-
-    for mat in materials_list:
-        for i, face in enumerate(mesh.tessfaces):
-            f_v = face.vertices
-            if mesh.materials[face.material_index].name != mat: continue
-
-            uf = mesh.tessface_uv_textures.active.data[i] if do_uv else None
-
-            fmt = 0
-            if(do_uv): fmt = face.material_index
-
-            if do_uv:
-                f_uv = uf.uv
-
-            if len(f_v) == 3:
-                new_tri = tri_wrapper((f_v[0], f_v[1], f_v[2]), fmt)
-                if (do_uv):
-                    new_tri.faceuvs = uv_key(f_uv[0]), uv_key(f_uv[1]), uv_key(f_uv[2])
-                else: new_tri.faceuvs = uv_key((0.0,0.0)), uv_key((1.0,0.0)), uv_key((0.0,1.0))
-                tri_list.append(new_tri)
-
-            else:  # it's a quad
-                new_tri = tri_wrapper((f_v[0], f_v[1], f_v[2]), fmt)
-                new_tri_2 = tri_wrapper((f_v[0], f_v[2], f_v[3]), fmt)
-
-                if (do_uv):
-                    new_tri.faceuvs = uv_key(f_uv[0]), uv_key(f_uv[1]), uv_key(f_uv[2])
-                    new_tri_2.faceuvs = uv_key(f_uv[0]), uv_key(f_uv[2]), uv_key(f_uv[3])
-                else:
-                    new_tri.faceuvs = uv_key((0.0,0.0)), uv_key((1.0,0.0)), uv_key((0.0,1.0))
-                    new_tri_2.faceuvs = uv_key((0.0,0.0)), uv_key((1.0,0.0)), uv_key((0.0,1.0))
-
-                tri_list.append(new_tri)
-                tri_list.append(new_tri_2)
-
-    return tri_list
-
-
+import mathutils
+
+if 'bpy' in locals():
+    import importlib
+    if 'p3d' in locals():
+        importlib.reload(p3d)
+
+import bpy
+from . import p3d
+
+def error_no_main(self, context):
+    self.layout.label(text='Every CD model must have a main mesh!')
+
+def get_material_type_name(name):
+    ar = name.split('_', 1)
+    t = ar[0]
+    if len(ar) == 1:
+        return (p3d.P3DMaterial.GOURAUD, name)
+    else:
+        if t == 'f':
+            t = p3d.P3DMaterial.FLAT
+        if t == 'fm':
+            t = p3d.P3DMaterial.FLAT_METAL
+        if t == 'g':
+            t = p3d.P3DMaterial.GOURAUD
+        if t == 'gm':
+            t = p3d.P3DMaterial.GOURAUD_METAL
+        if t == 'gme':
+            t = p3d.P3DMaterial.GOURAUD_METAL_ENV
+        if t == 's':
+            t = p3d.P3DMaterial.SHINING
+    
+    return (t, ar[1])
+
+def get_textures_used(ob):
+    textures = []
+    for mat in ob.data.materials:
+        tn = get_material_type_name(mat.name)[1]
+        if tn not in textures:
+            textures.append(tn)
+
+    return textures
 
 def save(operator,
-         context, filepath="",
+         context, filepath='',
          use_selection=True,
          enable_corona=False,
          enable_flares=True,
-         enable_environment=True, 
-         center_objects_to_origin=False, ):
+         enable_environment=True,
+         lower_top_bound=0.0,
+         lift_bottom_bound=0.0, 
+         export_log=True):
 
-    import bpy
-    import mathutils
+    # get the folder where file will be saved and add a log in that folder
+    work_path = '\\'.join(filepath.split('\\')[0:-1])
 
-    import time
-    from bpy_extras.io_utils import create_derived_objects, free_derived_objects
-
-    #get the folder where file will be saved and add a log in that folder
-    workingpath = '\\'.join(filepath.split('\\')[0:-1])
-    log_file = open(workingpath + "//export-log.txt", 'a')
-    # Time the export
-    time1 = time.clock()
+    log_file = open(work_path + '//export-log.txt', 'a')
     date = datetime.datetime.now()
+    log_file.write('Started exporting on {}\nFile path: {}\n'.format(date.strftime('%d-%m-%Y %H:%M:%S'), filepath))
+    print('\nExporting file to {}'.format(filepath))
 
-    log_file.write("Started exporting on " + date.strftime("%d-%m-%Y %H:%M:%S") + "\n" + "File path: " + filepath + "\n")
+    p = p3d.P3D()
 
-    global_matrix = mathutils.Matrix()
+    # construct p3d model
+    col = bpy.context.scene.collection
 
-    if bpy.ops.object.mode_set.poll():
-        bpy.ops.object.mode_set(mode='OBJECT')
+    # stores the list of exported meshes - useful for modders to define in .cca
+    exported_meshes_string = ''
 
-    # Make a list of all materials used in the selected meshes 
-    materials_list = ["colwhite"]
-    mesh_objects = []
-    lamp_objects = []
+    objects = []
 
-    collfound = False
-    shadfound = False
+    for ob in col.all_objects:
+         if ob.visible_get():
+            if not use_selection:
+                objects.append(ob)
+            elif ob.select_get():
+                objects.append(ob)
 
-    meshes_list = ""
+    main = None
+    shad = None
+    coll = None
 
-    scene = context.scene
+    p.textures = []
 
-    if use_selection:
-        objects = (ob for ob in scene.objects if ob.is_visible(scene) and ob.select)
-    else:
-        objects = (ob for ob in scene.objects if ob.is_visible(scene))
-
+    # find the main mesh of the model
     for ob in objects:
-        free, derived = create_derived_objects(scene, ob)
-
-        if derived is None:
-            continue
-
-        for ob_derived, mat in derived:
-            if ob.type == 'MESH':
-                try:
-                    data = ob_derived.to_mesh(scene, True, 'PREVIEW')
-                except:
-                    data = None
-
-                if "mainshad" in ob.name: shadfound = True
-                elif "maincoll" in ob.name: collfound = True
-
-                meshes_list += ob.name + " "
-
-                if data:
-                    matrix = global_matrix * mat
-                    data.transform(matrix)
-                    mesh_objects.append((ob_derived, data, matrix))
-                    mat_ls = data.materials
-                    mat_ls_len = len(mat_ls)
-
-                    # get material/image tuples.
-                    if data.tessface_uv_textures:
-                        if not mat_ls:
-                            mat = mat_name = None
-
-                        for f, uf in zip(data.tessfaces, data.tessface_uv_textures.active.data):
-                            if mat_ls:
-                                mat_index = f.material_index
-                                if mat_index >= mat_ls_len:
-                                    mat_index = f.mat = 0
-                                mat = mat_ls[mat_index]
-                                mat_name = None if mat is None else mat.name
-                            # else there already set to none
-
-                            if mat_name not in materials_list:
-                                materials_list.append(mat_name)
-
-                    else:
-                        log_file.write("No UVs found on mesh" + str(ob.name) + ". Using default UVs.\n")
-                        for mat in mat_ls:
-                            if mat:  # material may be None so check its not.
-                                if mat.name not in materials_list:
-                                    materials_list.append(mat.name)
-
-                        # Why 0 Why!
-                        for f in data.tessfaces:
-                            if f.material_index >= mat_ls_len:
-                                f.material_index = 0
-
-            if ob.type == 'LAMP':
-                lamp_objects.append(ob)
-
-
-        if free:
-            free_derived_objects(ob)
-
-
-    #write all the meshes list into the log, so we can use it when setting up the carinfo.cca
-    log_file.write("Meshes: " + meshes_list + "\n")
-
-
-    # Initialize the main chunk (primary):
-    primary = _3ds_chunk(sane_name("P3D"), write_size = False)
-
-    tex = _3ds_chunk(sane_name("TEX"))
-    tex_array = _3ds_bytearray()
-    for m in materials_list:
-        tex_array.add(_3ds_string(sane_name(m + ".tga")))
-    tex.add_variable("textures", tex_array)
-
-
-    lights = _3ds_chunk(sane_name("LIGHTS"))
-    lights_array = _3ds_array()
-
-
-    length = 0.0
-    height = 0.0
-    depth = 0.0
-
-    objcenterx = 0.0
-    objcentery = 0.0
-    objcenterz = 0.0
-
-    #we have to get the main meshes dimensions before 
-    #we save all the other meshes, so we could properly center them if needed
-    for ob, blender_mesh, matrix in mesh_objects:
-        if ob.name == "main":
-            v = blender_mesh.vertices[0].co
-            lowx = v[0]
-            highx = v[0]
-            lowy = v[1]
-            highy = v[1]
-            lowz = v[2]
-            highz = v[2]
-
-            for vert in blender_mesh.vertices:
-                pos = vert.co
-                if pos[0] < lowx: lowx = pos[0]
-                elif pos[0] > highx: highx = pos[0]
-
-                if pos[1] < lowy: lowy = pos[1]
-                elif pos[1] > highy: highy = pos[1]
-
-                if pos[2] < lowz: lowz = pos[2]
-                elif pos[2] > highz: highz = pos[2]
-
-            length = highx-lowx
-            height = highz-lowz
-            depth = highy-lowy
-
-            objcenterx = (highx+lowx)/2
-            objcentery = (highy+lowy)/2
-            objcenterz = (highz+lowz)/2
-
-
-    for l in lamp_objects:
-        lamp = _3ds_unnamed_chunk()
-        lamp.add_variable("name", _3ds_string(sane_name(l.name)))
-        pos = l.matrix_world.to_translation()
-        if(center_objects_to_origin == True):
-            lamp.add_variable("pos", _3ds_point_3d( (pos[0] - objcenterx, pos[2] - objcenterz, pos[1] - objcentery) ))
-        else:
-            lamp.add_variable("pos", _3ds_point_3d((pos[0], pos[2], pos[1])))
-        lamp.add_variable("range", _3ds_float(l.data.energy))
-        lamp.add_variable("color", _3ds_uint(int('%02x%02x%02x' % (int(l.data.color[0]*255), int(l.data.color[1]*255), int(l.data.color[2]*255)), 16)))
-
-        lamp.add_variable("corona", _3ds_byte(int(enable_corona)))
-        lamp.add_variable("flares", _3ds_byte(int(enable_flares)))
-        lamp.add_variable("environment", _3ds_byte(int(enable_environment)))
-        lights_array.add(lamp)
-
-    lights.add_variable("lights", lights_array)
-
-
-    meshes = _3ds_chunk(sane_name("MESHES"))
-    meshes_array = _3ds_array()
-
-    for ob, blender_mesh, matrix in mesh_objects:
-        submesh = _3ds_chunk(sane_name("SUBMESH"))
-        
-        # Extract the triangles from the mesh:
-        tri_list = extract_triangles(blender_mesh, materials_list)
-
-        material_size = []
-
-        for i in range(len(materials_list)):
-            material_size.append(0)
-
-        polys = _3ds_array()
-        for tri in tri_list:
-            poly = _3ds_unnamed_chunk()
-
-            n = materials_list.index(blender_mesh.materials[tri.mat].name)
-            material_size[n] += 1
-
-            poly.add_variable("p1", _3ds_ushort(tri.vertex_index[0]))
-            poly.add_variable("uv1", _3ds_point_uv(tri.faceuvs[0]))
-
-            poly.add_variable("p2", _3ds_ushort(tri.vertex_index[2]))
-            poly.add_variable("uv2", _3ds_point_uv(tri.faceuvs[2]))
-
-            poly.add_variable("p3", _3ds_ushort(tri.vertex_index[1]))
-            poly.add_variable("uv3", _3ds_point_uv(tri.faceuvs[1]))
-
-            polys.add(poly)
-
-        flags = 0
-
-        #if "coll" not in ob.name and "shad" not in ob.name: flags = flags | 2
-        if "shad" in ob.name: flags = flags | 4
-        elif "coll" in ob.name: flags = flags | 8
-        elif "main" in ob.name: 
-            flags = flags | 3
-            if shadfound == False: 
-                flags = flags | 4
-                log_file.write("! shadow mesh was not found, using main mesh for shadow.\n")
-            if collfound == False: 
-                flags = flags | 8
-                log_file.write("! collision mesh was not found, using main mesh for collisions.\n")
-        else: flags = flags | 2
-
-        #for some reason these are not used?
-        """if "det_" in ob.name: flags = flags | 16
-        if "gls_" in ob.name: flags = flags | 32
-        if "plas_" in ob.name: flags = flags | 64
-        if "wood_" in ob.name: flags = flags | 128
-        if "metl_" in ob.name: flags = flags | 256
-        if "expl_" in ob.name: flags = flags | 256 #????
-
-        if "headl_" in ob.name: flags = flags | 1024
-        if "brakel_" in ob.name: flags = flags | 2048"""
-
-        submesh.add_variable("name", _3ds_string(sane_name(ob.name)))
-        submesh.add_variable("flags", _3ds_uint(flags))
-
-        v = blender_mesh.vertices[0].co
-        lowx = v[0]
-        highx = v[0]
-        lowy = v[1]
-        highy = v[1]
-        lowz = v[2]
-        highz = v[2]
-
-        vertices = _3ds_array()
-        #find dimensions of every mesh
-        for vert in blender_mesh.vertices:
-            pos = vert.co
-            if pos[0] < lowx: lowx = pos[0]
-            elif pos[0] > highx: highx = pos[0]
-
-            if pos[1] < lowy: lowy = pos[1]
-            elif pos[1] > highy: highy = pos[1]
-
-            if pos[2] < lowz: lowz = pos[2]
-            elif pos[2] > highz: highz = pos[2]
-
-        #construct vertices array
-        for vert in blender_mesh.vertices:
-            pos = vert.co
-            if(center_objects_to_origin == True):
-                vertices.add(_3ds_point_3d( (pos[0] - (highx+lowx)/2, pos[2] - (highz+lowz)/2, pos[1] - (highy+lowy)/2) ))
-            else:
-                vertices.add(_3ds_point_3d( (pos[0], pos[2], pos[1]) ))
-
-        #construct mesh positions array
-        pos = ob.matrix_world.to_translation()
-        if(center_objects_to_origin == True):
-            submesh.add_variable("pos", _3ds_point_3d(((highx+lowx)/2 - objcenterx, (highz+lowz)/2 - objcenterz, (highy+lowy)/2 - objcentery)))
-        else:
-            submesh.add_variable("pos", _3ds_point_3d((pos[0], pos[2], pos[1])))
-
-        #save mesh dimensions
-        submesh.add_variable("Length", _3ds_float(highx-lowx))
-        submesh.add_variable("Height", _3ds_float(highz-lowz))
-        submesh.add_variable("Depth", _3ds_float(highy-lowy))
-
-        s = 0
-        for i in range(len(materials_list)):
-            submesh.add_variable("texstart", _3ds_ushort(s))
-            submesh.add_variable("numflat", _3ds_ushort(0))
-            submesh.add_variable("numflatmetal", _3ds_ushort(0))
-            submesh.add_variable("gourad", _3ds_ushort(material_size[i]))
-            submesh.add_variable("gouradmetal", _3ds_ushort(0))
-            submesh.add_variable("gouradmetalenv", _3ds_ushort(0))
-            submesh.add_variable("shining", _3ds_ushort(0))
-            s += material_size[i]
-
-
-        submesh.add_variable("vertices", vertices)
-        submesh.add_variable("polygons", polys)
-
-
-        if submesh.validate():
-            meshes_array.add(submesh)
-        else:
-            operator.report({'WARNING'}, "Object %r can't be written into a 3DS file")
-
-        if not blender_mesh.users:
-            bpy.data.meshes.remove(blender_mesh)
-
-
-    meshes.add_variable("meshes", meshes_array)
-
-    user = _3ds_chunk(sane_name("USER"))
-    user.add_variable("userdatasize", _3ds_uint(0))
-    user.add_variable("userdata", _3ds_stringtag(sane_name("")))
-
-
-    primary.add_variable("version", _3ds_byte(2))
-
-    primary.add_variable("Length", _3ds_float(length))
-    primary.add_variable("Height", _3ds_float(height))
-    primary.add_variable("Depth", _3ds_float(depth))
-
-    primary.add_subchunk(tex)
-    primary.add_subchunk(lights)
-    primary.add_subchunk(meshes)
-    primary.add_subchunk(user)
-
-
+        if ob.type == 'MESH':
+            p.textures = list(set(p.textures + get_textures_used(ob)))
+            if ob.name == 'main':
+                main = ob
+            if ob.name == 'maincoll':
+                coll = ob
+            if ob.name == 'mainshad':
+                shad = ob
+
+    if main is None:
+        bpy.context.window_manager.popup_menu(error_no_main, title='No main mesh', icon='ERROR')
+        print('!!! Failed to export p3d. No main mesh found.')
+        log_file.write('!!! Failed to export p3d. No main mesh found.\n')
+        log_file.close()
+        return {'CANCELLED'}
+
+    if shad is None:
+        print('! Shadow mesh was not found, using main mesh for shadow.')
+        log_file.write('! Shadow mesh was not found, using main mesh for shadow.\n')
+    if coll is None:
+        print('! Collision mesh was not found, using main mesh for collisions.')
+        log_file.write('! Collision mesh was not found, using main mesh for collisions.\n')
+
+    # the main mesh in p3d is always at 0.0.
+    # this means we need to move all other models alongside main mesh
+    main_center = main.location
+
+    p.num_textures = len(p.textures)
     
-    #calculate all the sizes
-    primary.get_size()
-    # Open the file for writing:
+    p.meshes = []
+    p.lights = []
+    for ob in objects:
+        if ob.type == 'LIGHT':
+            p.num_lights += 1
+
+            light = p3d.P3DLight()
+            light.name = ob.name
+            light.pos = ob.location - main_center
+            light.range = ob.data.energy
+            light.color = p3d.color_to_int(ob.data.color)
+
+            light.show_corona = enable_corona
+            light.show_lens_flares = enable_flares
+            light.Lightup_environment = enable_environment
+
+            p.lights.append(light)
+
+        if ob.type == 'MESH':
+            m = p3d.P3DMesh()
+            # save general mesh data
+            m.name = ob.name
+            m.pos = ob.location - main_center
+
+            mesh = ob.data
+
+            # save vertex positions
+            scale = ob.scale
+
+            lowx = 0.0
+            highx = 0.0
+            lowy = 0.0
+            highy = 0.0
+            lowz = 0.0
+            highz = 0.0
+
+            if len(m.vertices) > 0:
+                lowx = highx = m.vertices[0].co[0]*scale[0]
+                lowy = highy = m.vertices[0].co[1]*scale[1]
+                lowz = highz = m.vertices[0].co[2]*scale[2]
+
+            # save vertices and calculate mesh bounds
+            m.vertices = []
+            for v in mesh.vertices:
+                pos = [a*b for a,b in zip(v.co,scale)]
+                if lowx > pos[0]: lowx = pos[0]
+                if highx < pos[0]: highx = pos[0]
+                if lowy > pos[1]: lowy = pos[1]
+                if highy < pos[1]: highy = pos[1]
+                if lowz > pos[2]: lowz = pos[2]
+                if highz < pos[2]: highz = pos[2]
+                m.vertices.append(pos)
+
+            m.num_vertices = len(m.vertices)
+
+            m.length = highx - lowx
+            m.height = highz - lowz
+            m.depth = highy - lowy
+
+            # save model bounds
+            if ob == main:
+                m.height -= lower_top_bound + lift_bottom_bound
+                p.length = m.length
+                p.height = m.height
+                p.depth = m.depth
+
+                # while this looks dumb, this is how original makep3d works
+                if p.length >= 19.95 and p.length <= 20.05: p.length = 20
+                if p.length >= 39.95 and p.length <= 40.05: p.length = 40
+                if p.depth >= 19.95 and p.depth <= 20.05: p.depth = 20
+                if p.depth >= 39.95 and p.depth <= 40.05: p.depth = 40
+
+
+            # save the flags
+            if ob == main:
+                m.flags |= 3
+                if shad is None:
+                    m.flags |= 4
+                if coll is None:
+                    m.flags |= 8
+            elif ob == shad:
+                m.flags |= 4
+            elif ob == coll:
+                m.flags |= 8
+            else:
+                m.flags |= 2
+
+            mesh.calc_loop_triangles()
+
+            # save polys in blender order and texture infos
+            m.texture_infos = [p3d.P3DTextureInfo() for i in range(p.num_textures)]
+            polys = []
+            for uv_layer in mesh.uv_layers:
+                for tri in mesh.loop_triangles:
+                    if len(tri.loops) != 3:
+                        break
+                    pol = p3d.P3DPolygon()
+
+                    # texture info
+                    pol.material, pol.texture = get_material_type_name(ob.data.materials[tri.material_index].name)
+                    i = p.textures.index(pol.texture)
+                    if pol.material == p3d.P3DMaterial.FLAT:
+                        m.texture_infos[i].num_flat += 1
+                    if pol.material == p3d.P3DMaterial.FLAT_METAL:
+                        m.texture_infos[i].num_flat_metal += 1
+                    if pol.material == p3d.P3DMaterial.GOURAUD:
+                        m.texture_infos[i].num_gouraud += 1
+                    if pol.material == p3d.P3DMaterial.GOURAUD_METAL:
+                        m.texture_infos[i].num_gouraud_metal += 1
+                    if pol.material == p3d.P3DMaterial.GOURAUD_METAL_ENV:
+                        m.texture_infos[i].num_gouraud_metal_env += 1
+                    if pol.material == p3d.P3DMaterial.SHINING:
+                        m.texture_infos[i].num_shining += 1
+
+                    # polygon info
+                    pol.p1 = tri.vertices[0]
+                    pol.u1, pol.v1 = uv_layer.data[tri.loops[0]].uv
+
+                    pol.p2 = tri.vertices[1]
+                    pol.u2, pol.v2 = uv_layer.data[tri.loops[1]].uv
+
+                    pol.p3 = tri.vertices[2]
+                    pol.u3, pol.v3 = uv_layer.data[tri.loops[2]].uv
+
+                    polys.append(pol)
+
+            # reorder polys into CD format, to align texture infos
+            m.polys = []
+            for t in range(len(p.textures)):
+                if t > 0:
+                    m.texture_infos[t].texture_start = m.texture_infos[t-1].texture_start 
+                    m.texture_infos[t].texture_start += m.texture_infos[t-1].num_flat
+                    m.texture_infos[t].texture_start += m.texture_infos[t-1].num_flat_metal
+                    m.texture_infos[t].texture_start += m.texture_infos[t-1].num_gouraud
+                    m.texture_infos[t].texture_start += m.texture_infos[t-1].num_gouraud_metal
+                    m.texture_infos[t].texture_start += m.texture_infos[t-1].num_gouraud_metal_env
+                    m.texture_infos[t].texture_start += m.texture_infos[t-1].num_shining
+
+                for i, pol in enumerate(polys):
+                    if pol.texture == p.textures[t] and pol.material == p3d.P3DMaterial.FLAT:
+                        m.polys.append(pol)
+                
+                for i, pol in enumerate(polys):
+                    if pol.texture == p.textures[t] and pol.material == p3d.P3DMaterial.FLAT_METAL:
+                        m.polys.append(pol)
+
+                for i, pol in enumerate(polys):
+                    if pol.texture == p.textures[t] and pol.material == p3d.P3DMaterial.GOURAUD:
+                        m.polys.append(pol)
+
+                for i, pol in enumerate(polys):
+                    if pol.texture == p.textures[t] and pol.material == p3d.P3DMaterial.GOURAUD_METAL:
+                        m.polys.append(pol)
+
+                for i, pol in enumerate(polys):
+                    if pol.texture == p.textures[t] and pol.material == p3d.P3DMaterial.GOURAUD_METAL_ENV:
+                        m.polys.append(pol)
+
+                for i, pol in enumerate(polys):
+                    if pol.texture == p.textures[t] and pol.material == p3d.P3DMaterial.SHINING:
+                        m.polys.append(pol)
+
+
+            m.num_polys = len(m.polys)
+
+            if len(m.vertices) == 0 or len(m.polys) == 0:
+                print('Can\'t export empty mesh "{}". Ignoring'.format(m.name))
+                log_file.write('Can\'t export empty mesh "{}". Ignoring'.format(m.name))
+            else:
+                p.num_meshes += 1
+                p.meshes.append(m)
+                exported_meshes_string += ob.name + ' '
+
+    # save p3d into file
     file = open(filepath, 'wb')
-
-    # Recursively write the chunks to file:
-    primary.write(file)
-
-    # Close the file:
+    p.save(file)
     file.close()
 
-    # Clear name mapping vars, could make locals too
-    del name_unique[:]
-    name_mapping.clear()
-
-    print("p3d export time: %.2f" % (time.clock() - time1))
-    log_file.write("Finished p3d export. Time taken: %.2f \n\n\n" % (time.clock() - time1))
+    print('p3d exported')
+    log_file.write('Meshes: {}\n'.format(exported_meshes_string))
+    log_file.write('Finished p3d export.\n\n')
     log_file.close()
 
     return {'FINISHED'}
