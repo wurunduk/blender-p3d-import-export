@@ -141,7 +141,10 @@ def create_meshes(p3d_model, col):
         mesh.from_pydata(m.vertices, [], faces)
 
         for i, f in enumerate(mesh.polygons):
-            f.material_index = [j for j, item in enumerate(m.materials_used) if item[1] == m.polys[i].texture and item[0] == m.polys[i].material][0]
+            mat_ind = [(j, item) for j, item in enumerate(m.materials_used) if item[1] == m.polys[i].texture and item[0] == m.polys[i].material]
+            f.material_index = mat_ind[0][0]
+            if  mat_ind[0][1][0] == p3d.P3DMaterial.GOURAUD or mat_ind[0][1][0] == p3d.P3DMaterial.GOURAUD_METAL or mat_ind[0][1][0] == p3d.P3DMaterial.GOURAUD_METAL_ENV:
+                f.use_smooth = True
 
         uv_layer = mesh.uv_layers.new(do_init=False)
         mesh.uv_layers.active = uv_layer
