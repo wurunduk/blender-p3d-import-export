@@ -55,6 +55,11 @@ class ImportCDP3D(bpy.types.Operator, ImportHelper):
     filename_ext = ".p3d"
     filter_glob: StringProperty(default="*.p3d", options={'HIDDEN'})
 
+    use_edge_split_modifier: BoolProperty(
+        name="Use EdgeSplit modifier for hard edges, remove doubles",
+        default=True,
+    )
+
     cd_path: StringProperty(
         name="Path to general texture folder",
         description="If provided plugin will auto load textures from this folder"

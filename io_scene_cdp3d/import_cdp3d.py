@@ -26,7 +26,10 @@ if 'bpy' in locals():
         importlib.reload(p3d)
 
 import bpy
+import bmesh
 from . import p3d
+
+use_edge_split = True
 
 def texture_exists(full_path, file_name):
     #remove extension and add to path
@@ -151,6 +154,20 @@ def create_meshes(p3d_model, col):
 
         uv_layer.data.foreach_set('uv', [uv for pair in [uvs[i] for i, l in enumerate(mesh.loops)] for uv in pair])
 
+        bm = bmesh.new()
+        bm.from_mesh(mesh)
+
+        for edge in bm.edges:
+            if len(edge.link_loops) == 1:
+                edge.smooth = False
+
+        bmesh.ops.remove_doubles(bm, verts=bm.verts, dist=0.0001)
+        mod = obj.modifiers.new("EdgeSplit", 'EDGE_SPLIT')
+        mod.use_edge_angle = False
+        bm.to_mesh(mesh)
+        bm.free()
+
+
 def create_lights(p3d_model, col):
     for l in p3d_model.lights:
         new_light = bpy.data.lights.new(name=l.name, type='POINT')
@@ -164,6 +181,7 @@ def create_lights(p3d_model, col):
 
 def load(operator,
          context,
+         use_edge_split_modifier=True,
          filepath='',
          cd_path='', car_path='',
          cd_path_mod='', car_path_mod=''):
@@ -171,6 +189,8 @@ def load(operator,
     file_name = filepath.split('\\')[-1]
 
     print('\nImporting file {} from {}'.format(file_name, filepath))
+
+    use_edge_split = use_edge_split_modifier
 
     search_path = []
     if os.path.exists(cd_path):

@@ -12,6 +12,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 ### Added
 - Added p3d model info print into python console on export
 - Added option to export model with modifiers applied(Enabled by default)
+- Added option to use EdgeSplit modifier when importing model
 - Auto exit edit mode when exporting
 - Set correct smoothing based on material when importing
 ### Changed
