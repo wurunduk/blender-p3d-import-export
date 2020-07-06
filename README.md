@@ -39,13 +39,12 @@ CD .p3d files do not store any information about normals which means we can not 
 ## TODO:
 - when importing sort car parts into collections
 - maybe load .cca and add positions
-- check if no uvs or no material
-- correctly center meshes
-- if no .tga in material name - add it
-- automaticaly set floor
+- correctly center meshes?
+- ~~automaticaly set floor~~
 - save export import settings if possible
-- sanitise names of models\textures
 - apply obect mode rotation
+- ~~check if no material is on object~~
 - ~~option to export models with applied modifiers~~
 - ~~correctly set smoothing based on material when importing~~
 - ~~error when in edit mode~~
+- ~~check material names and .tga automatically~~

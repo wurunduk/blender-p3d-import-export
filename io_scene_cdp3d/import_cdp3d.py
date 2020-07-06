@@ -217,4 +217,10 @@ def load(operator,
     create_lights(p, col)
     create_meshes(p, col)
 
+    floor_level = bpy.data.objects.new('floor_level', None)
+    col.objects.link(floor_level)
+
+    floor_level.location = (0.0,0.0, - p.height/2.0)
+    floor_level.empty_display_type = 'PLAIN_AXES'
+
     return {'FINISHED'}

@@ -31,6 +31,18 @@ from . import p3d
 def error_no_main(self, context):
     self.layout.label(text='Every CD model must have a main mesh!')
 
+def sanitise_material(name):
+    if name.endswith('.tga'):
+        name = name[:-4]
+    name = name.replace('.', '_')
+    name = name.replace(' ', '_')
+    if not name.endswith('.tga'):
+        name += '.tga'
+    return name
+
+def sanitise_mesh_name(name):
+    return name.replace(' ', '_')
+
 def get_material_type_name(name):
     ar = name.split('_', 1)
     t = ar[0]
@@ -50,10 +62,27 @@ def get_material_type_name(name):
         if t == 's':
             t = p3d.P3DMaterial.SHINING
     
-    return (t, ar[1])
+    return (t, sanitise_material(ar[1]))
 
 def get_textures_used(ob):
     textures = []
+
+    m = None
+
+    # Check if there are any materials on the mesh
+    for mat in ob.data.materials:
+        if mat is not None:
+            m = mat
+            break
+
+    # if no material was found, add default colwhite.tga material to the object
+    if m is None:
+        col_white = bpy.data.materials.get('f_colwhite.tga')
+        if col_white is None:
+            col_white = bpy.data.materials.new('f_colwhite.tga')
+
+        ob.data.materials.append(col_white)
+
     for mat in ob.data.materials:
         tn = get_material_type_name(mat.name)[1]
         if tn not in textures:
@@ -68,6 +97,7 @@ def save(operator,
          enable_corona=False,
          enable_flares=True,
          enable_environment=True,
+         use_empty_for_floor_level=True,
          lower_top_bound=0.0,
          lift_bottom_bound=0.0, 
          export_log=True):
@@ -154,7 +184,7 @@ def save(operator,
             p.num_lights += 1
 
             light = p3d.P3DLight()
-            light.name = ob.name
+            light.name = sanitise_mesh_name(ob.name)
             light.pos = ob.location - main_center
             light.range = ob.data.energy
             light.color = p3d.color_to_int(ob.data.color)
@@ -168,7 +198,7 @@ def save(operator,
         if ob.type == 'MESH':
             m = p3d.P3DMesh()
 
-            m.name = ob.name
+            m.name = sanitise_mesh_name(ob.name)
             m.pos = ob.location - main_center
 
             mesh = ob.to_mesh()
@@ -208,6 +238,11 @@ def save(operator,
 
             # save model bounds
             if ob == main:
+                floor_level = bpy.data.objects['floor_level']
+
+                if floor_level is not None and use_empty_for_floor_level:
+                    m.height = -floor_level.location[2]*2
+
                 m.height -= lower_top_bound + lift_bottom_bound
                 p.length = m.length
                 p.height = m.height

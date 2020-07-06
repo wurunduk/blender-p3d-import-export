@@ -128,6 +128,11 @@ class ExportCDP3D(bpy.types.Operator, ExportHelper):
             default=True,
             )
 
+    use_empty_for_floor_level: BoolProperty(
+        name = "Use empty 'floor_level' object to define floor level",
+        default=True,
+    )
+
     lower_top_bound: FloatProperty(
             name = "Lower Top Bound",
             default = 0.0,
@@ -156,11 +161,11 @@ class ExportCDP3D(bpy.types.Operator, ExportHelper):
 
 # Add to a menu
 def menu_func_export(self, context):
-    self.layout.operator(ExportCDP3D.bl_idname, text="Crashday (.p3d)")
+    self.layout.operator(ExportCDP3D.bl_idname, text="Crashday model(.p3d)")
 
 
 def menu_func_import(self, context):
-    self.layout.operator(ImportCDP3D.bl_idname, text="Crashday (.p3d)")
+    self.layout.operator(ImportCDP3D.bl_idname, text="Crashday model(.p3d)")
 
 
 def register():
