@@ -79,16 +79,20 @@ def save(operator,
     log_file.write('Started exporting on {}\nFile path: {}\n'.format(date.strftime('%d-%m-%Y %H:%M:%S'), filepath))
     print('\nExporting file to {}'.format(filepath))
 
+    # create empty p3d model
     p = p3d.P3D()
 
-    # construct p3d model
+    # exit edit mode
+    if bpy.ops.object.mode_set.poll():
+        bpy.ops.object.mode_set(mode='OBJECT')
+
     col = bpy.context.scene.collection
 
     # stores the list of exported meshes - useful for modders to define in .cca
     exported_meshes_string = ''
 
+    # store list oj objects to export
     objects = []
-
     for ob in col.all_objects:
          if ob.visible_get():
             if not use_selection:
@@ -96,23 +100,29 @@ def save(operator,
             elif ob.select_get():
                 objects.append(ob)
 
+    # store the list of all the used textures
+    p.textures = []
+
+    # store main, shadow and collision meshes
     main = None
     shad = None
     coll = None
 
-    p.textures = []
-
-    # find the main mesh of the model
+    # find the main, sadow and coll mesh of the model
     for ob in objects:
         if ob.type == 'MESH':
             p.textures = list(set(p.textures + get_textures_used(ob)))
             if ob.name == 'main':
                 main = ob
-            if ob.name == 'maincoll':
-                coll = ob
             if ob.name == 'mainshad':
                 shad = ob
+            if ob.name == 'maincoll':
+                coll = ob
 
+    # save the amount of textures used in p3d model
+    p.num_textures = len(p.textures)
+
+    # p3d models must have a main mesh
     if main is None:
         bpy.context.window_manager.popup_menu(error_no_main, title='No main mesh', icon='ERROR')
         print('!!! Failed to export p3d. No main mesh found.')
@@ -130,9 +140,8 @@ def save(operator,
     # the main mesh in p3d is always at 0.0.
     # this means we need to move all other models alongside main mesh
     main_center = main.location
-
-    p.num_textures = len(p.textures)
     
+    # iterate through all objects in the scene and save into p3d model
     p.meshes = []
     p.lights = []
     for ob in objects:
@@ -204,7 +213,6 @@ def save(operator,
                 if p.length >= 39.95 and p.length <= 40.05: p.length = 40
                 if p.depth >= 19.95 and p.depth <= 20.05: p.depth = 20
                 if p.depth >= 39.95 and p.depth <= 40.05: p.depth = 40
-
 
             # save the flags
             if ob == main:
@@ -308,6 +316,7 @@ def save(operator,
 
     # save p3d into file
     file = open(filepath, 'wb')
+    print(p)
     p.save(file)
     file.close()
 

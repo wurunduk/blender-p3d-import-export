@@ -13,12 +13,13 @@ When importing you can also add up to four texture path's. If provided, the addo
 ### Exporting
 "Lower top bound" and "Life bottom bound" are working the same as in makep3d.  
 Also you can enable export-log which is created in the same folder as the exported file and contains export log as well as meshes list, used in .cca files.
-#### Lights
+##### Lights
 When exporting you have options to turn on coronas, flares, and environment light up for all the lights.  
 Though, makep3d sets coronas to off and environment light up to on for every light, which may mean whose values are unused.  
 
 ## Moddeling guidelines
-CD .p3d format does not support a lot of options available in blender and also uses some old techniques to achieve certain things. Because of that users need to model and structure the scene in a certain way to achieve a good look.
+CD .p3d format does not support a lot of options available in blender and also uses some old techniques to achieve certain things. Because of that users need to model and structure the scene in a certain way to achieve a good look.  
+Y+ axis in blender is forward direction for cars.
 ### Lights
 Parameters which are exported from light objects are "color" and "power"
 ### Materials
@@ -40,3 +41,11 @@ CD .p3d files do not store any information about normals which means we can not 
 - maybe load .cca and add positions
 - check if no uvs or no material
 - correctly center meshes
+- if no .tga in material name - add it
+- automaticaly set floor
+- ~~error when in edit mode~~
+- apply modifiers
+- save export import settings if possible
+- sanitise names of models\textures
+- set shading to smooth on import
+- apply obect mode rotation

@@ -77,9 +77,7 @@ class ImportCDP3D(bpy.types.Operator, ImportHelper):
 
     def execute(self, context):
         from . import import_cdp3d
-        keywords = self.as_keywords(ignore=("axis_forward",
-                                            "axis_up",
-                                            "filter_glob",
+        keywords = self.as_keywords(ignore=("filter_glob",
                                             ))
 
         return import_cdp3d.load(self, context, **keywords)
@@ -138,9 +136,7 @@ class ExportCDP3D(bpy.types.Operator, ExportHelper):
     def execute(self, context):
         from . import export_cdp3d
 
-        keywords = self.as_keywords(ignore=("axis_forward",
-                                            "axis_up",
-                                            "filter_glob",
+        keywords = self.as_keywords(ignore=("filter_glob",
                                             "check_existing",
                                             ))
 

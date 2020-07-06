@@ -8,7 +8,14 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 ### Changed
 ### Fixed
 
-## [1.4.1] - 202-07-04
+## [1.4.2]
+### Added
+- Added p3d model info print into python console on export
+- Auto exit edit mode when exporting
+### Changed
+### Fixed
+
+## [1.4.1] - 2020-07-04
 ### Added
 - Added support for p3d in-file material type
 - Exporter now applies object scaling to the exported model
@@ -17,7 +24,6 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 - Added lower and upper bounds move option on export
 ### Changed
 - Models are now imported into collections with the name of the loaded model
-### Fixed
 
 ## [1.4.0] - 2020-07-03
 - This update is a complete rewrite of the plugin for blender version 2.83.
