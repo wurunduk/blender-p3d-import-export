@@ -8,20 +8,21 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 ### Changed
 ### Fixed
 
-## [1.4.2]
+## [1.4.2] 2020-07-06
 ### Added
+- Added carinfo.cca import, carinfo.txt export for managing positions and mesh list
 - Added p3d model info print into python console on export
 - Added option to export model with modifiers applied(Enabled by default)
 - Added option to use EdgeSplit modifier when importing model
 - Auto exit edit mode when exporting
 - Set correct smoothing based on material when importing
 - Automatically add .tga to material names on export if not present
-- Replace unsupported characters on export with '_'
 - Empty 'floor_level' object in the scene now defines in-game floor level
+- Replace unsupported characters in materials on export with '_'
 ### Changed
 ### Fixed
 - Fixed unnecessary info printing on export
-- If object have no materials colwhite.tga will be used by default
+- If object have no materials, colwhite.tga will be used by default
 
 ## [1.4.1] - 2020-07-04
 ### Added

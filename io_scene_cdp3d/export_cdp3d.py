@@ -366,3 +366,66 @@ def save(operator,
     log_file.close()
 
     return {'FINISHED'}
+
+def save_pos(f, col, name):
+    obj = col.objects.get(name)
+    pos = (0.0,0.0,0.0)
+    if obj is not None:
+        p = obj.location
+        pos = (p[0], p[2], p[1])
+
+    f.write('{:.4g} {:.4g} {:.4g} \t\t\t # {}{}\n'.format(pos[0], pos[1], pos[2], '!!!NOT FOUND ON EXPORT  ' if obj is None else '', name))
+
+def save_pos2(f, col, name):
+    obj = col.objects.get(name)
+    print(obj)
+    pos = (0.0,0.0,0.0)
+    if obj is not None:
+        p = obj.location
+        pos = (p[0], p[2], p[1])
+
+    f.write('{:.4g} \t\t\t # {}{}\n'.format(pos[2], '!!!NOT FOUND ON EXPORT  ' if obj is None else '', name))
+
+def save_cca(operator,
+         context, filepath=''):
+
+    f = open(filepath, 'w')
+    col = bpy.context.scene
+
+    exported_meshes_string = ''
+
+    for ob in col.collection.all_objects:
+        if ob.type == 'MESH':
+            exported_meshes_string += ob.name + ' '
+
+    f.write('Meshes: {}\n\n'.format(exported_meshes_string))
+
+    save_pos(f, col, 'center_of_gravity_pos')
+    f.write('\n')
+    save_pos(f, col, 'left_upper_wheel_pos')
+    save_pos(f, col, 'right_lower_wheel_pos')
+    save_pos(f, col, 'minigun_pos')
+    f.write('0.0\t\t\t # Angle of minigun (negative values for downpointing)\n')
+    save_pos(f, col, 'mines_pos')
+    save_pos(f, col, 'missiles_pos')
+    save_pos(f, col, 'driver_pos')
+    save_pos(f, col, 'exhaust_pos')
+    save_pos(f, col, 'exhaust2_pos')
+    save_pos(f, col, 'flag_pos')
+    save_pos(f, col, 'bomb_pos')
+    save_pos(f, col, 'cockpit_cam_pos')
+    save_pos(f, col, 'roof_cam_pos')
+    save_pos(f, col, 'hood_cam_pos')
+    save_pos(f, col, 'bumper_cam_pos')
+    save_pos(f, col, 'rear_view_cam_pos')
+    save_pos(f, col, 'left_side_cam_pos')
+    save_pos(f, col, 'right_side_cam_pos')
+    save_pos(f, col, 'driver1_cam_pos')
+    save_pos(f, col, 'driver2_cam_pos')
+    save_pos(f, col, 'driver3_cam_pos')
+    save_pos(f, col, 'steering_wheel_pos')
+    save_pos(f, col, 'car_cover_pos')
+    save_pos2(f, col, 'engine_pos')
+
+    f.close()
+    return {'FINISHED'}

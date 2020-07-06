@@ -179,6 +179,13 @@ def create_lights(p3d_model, col):
 
         col.objects.link(light_object)
 
+def create_pos(col, pos, name):
+    obj = bpy.data.objects.new(name, None)
+    col.objects.link(obj)
+
+    obj.location = pos
+    obj.empty_display_type = 'PLAIN_AXES'
+
 def load(operator,
          context,
          use_edge_split_modifier=True,
@@ -217,10 +224,71 @@ def load(operator,
     create_lights(p, col)
     create_meshes(p, col)
 
-    floor_level = bpy.data.objects.new('floor_level', None)
-    col.objects.link(floor_level)
-
-    floor_level.location = (0.0,0.0, - p.height/2.0)
-    floor_level.empty_display_type = 'PLAIN_AXES'
+    create_pos(col, (0.0, 0.0, - p.height/2.0), 'floor_level')
 
     return {'FINISHED'}
+
+def add_position(line, col, name):
+    line = line.split('#')[0]
+    line = line.strip()
+    pos = [float(i) for i in line.split(' ')]
+
+    if len(pos) != 3:
+        return
+
+    temp = pos[1]
+    pos[1] = pos[2]
+    pos[2] = temp
+
+    create_pos(col, pos, name)
+
+# thanks CD for storing a position as one float yes
+def add_position2(line, col, name):
+    line = line.split('#')[0]
+    line = line.strip()
+    pos = float(line)
+
+    create_pos(col, (0.0, pos, 0.0), name)
+    
+
+def load_cca(operator, context, filepath=''): 
+    file = open(filepath, 'r')
+    content = file.readlines()
+
+    col = bpy.data.collections.new('Positions')
+    bpy.context.scene.collection.children.link(col)
+
+    add_position(content[6], col, 'center_of_gravity_pos')
+
+    p = content.index('--- Positions ---\n')
+
+    add_position(content[p+2], col, 'left_upper_wheel_pos')
+    add_position(content[p+3], col, 'right_lower_wheel_pos')
+    add_position(content[p+4], col, 'minigun_pos')
+    add_position(content[p+6], col, 'mines_pos')
+    add_position(content[p+7], col, 'missiles_pos')
+    add_position(content[p+8], col, 'driver_pos')
+    add_position(content[p+9], col, 'exhaust_pos')
+    add_position(content[p+10], col, 'exhaust2_pos')
+    add_position(content[p+11], col, 'flag_pos')
+    add_position(content[p+12], col, 'bomb_pos')
+    add_position(content[p+13], col, 'cockpit_cam_pos')
+    add_position(content[p+14], col, 'roof_cam_pos')
+    add_position(content[p+15], col, 'hood_cam_pos')
+    add_position(content[p+16], col, 'bumper_cam_pos')
+    add_position(content[p+17], col, 'rear_view_cam_pos')
+    add_position(content[p+18], col, 'left_side_cam_pos')
+    add_position(content[p+19], col, 'right_side_cam_pos')
+    add_position(content[p+20], col, 'driver1_cam_pos')
+    add_position(content[p+21], col, 'driver2_cam_pos')
+    add_position(content[p+22], col, 'driver3_cam_pos')
+    add_position(content[p+23], col, 'steering_wheel_pos')
+    add_position(content[p+24], col, 'car_cover_pos')
+    add_position2(content[p+25], col, 'engine_pos')
+
+    file.close()
+
+    return {'FINISHED'}
+    
+    
+

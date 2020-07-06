@@ -21,7 +21,7 @@ bl_info = {
     "author": "Wurunduk",
     "blender": (2, 83, 0),
     "location": "File > Import-Export",
-    "version": (1, 4, 1),
+    "version": (1, 4, 2),
     "support": 'COMMUNITY',
     "category": "Import-Export"}
 
@@ -45,7 +45,20 @@ from bpy_extras.io_utils import (
         ExportHelper,
         )
 
+class ImportCDCCA(bpy.types.Operator, ImportHelper):
+    bl_idname = "import_scene.crashday_cca"
+    bl_label = 'Import CCA'
+    bl_options = {'UNDO'}
 
+    filename_ext = ".cca"
+    filter_glob: StringProperty(default="*.cca", options={'HIDDEN'})
+
+    def execute(self, context):
+        from . import import_cdp3d
+        keywords = self.as_keywords(ignore=("filter_glob",
+                                            ))
+
+        return import_cdp3d.load_cca(self, context, **keywords)
 
 class ImportCDP3D(bpy.types.Operator, ImportHelper):
     bl_idname = "import_scene.crashday_p3d"
@@ -87,6 +100,24 @@ class ImportCDP3D(bpy.types.Operator, ImportHelper):
 
         return import_cdp3d.load(self, context, **keywords)
 
+class ExportCDCCA(bpy.types.Operator, ExportHelper):
+    bl_idname = "export_scene.crashday_cca"
+    bl_label = 'Export CCA'
+
+    filename_ext = ".txt"
+    filter_glob:StringProperty(
+            default="*.txt",
+            options={'HIDDEN'},
+            )
+
+    def execute(self, context):
+        from . import export_cdp3d
+
+        keywords = self.as_keywords(ignore=("filter_glob",
+                                            "check_existing",
+                                            ))
+
+        return export_cdp3d.save_cca(self, context, **keywords)
 
 class ExportCDP3D(bpy.types.Operator, ExportHelper):
     bl_idname = "export_scene.crashday_p3d"
@@ -146,7 +177,7 @@ class ExportCDP3D(bpy.types.Operator, ExportHelper):
     export_log: BoolProperty(
             name = "Export Log",
             description = "Create a log file of export process with useful data",
-            default=True,
+            default=False,
             )
 
     def execute(self, context):
@@ -161,16 +192,20 @@ class ExportCDP3D(bpy.types.Operator, ExportHelper):
 
 # Add to a menu
 def menu_func_export(self, context):
-    self.layout.operator(ExportCDP3D.bl_idname, text="Crashday model(.p3d)")
+    self.layout.operator(ExportCDP3D.bl_idname, text="Crashday Model(.p3d)")
+    self.layout.operator(ExportCDCCA.bl_idname, text="Crashday Carinfo Pos(.txt)")
 
 
 def menu_func_import(self, context):
-    self.layout.operator(ImportCDP3D.bl_idname, text="Crashday model(.p3d)")
+    self.layout.operator(ImportCDP3D.bl_idname, text="Crashday Model(.p3d)")
+    self.layout.operator(ImportCDCCA.bl_idname, text="Crashday Carinfo(.cca)")
 
 
 def register():
     bpy.utils.register_class(ExportCDP3D)
+    bpy.utils.register_class(ExportCDCCA)
     bpy.utils.register_class(ImportCDP3D)
+    bpy.utils.register_class(ImportCDCCA)
 
     bpy.types.TOPBAR_MT_file_import.append(menu_func_import)
     bpy.types.TOPBAR_MT_file_export.append(menu_func_export)
@@ -178,7 +213,9 @@ def register():
 
 def unregister():
     bpy.utils.unregister_class(ExportCDP3D)
+    bpy.utils.unregister_class(ExportCDCCA)
     bpy.utils.unregister_class(ImportCDP3D)
+    bpy.utils.unregister_class(ImportCDCCA)
 
     bpy.types.TOPBAR_MT_file_import.remove(menu_func_import)
     bpy.types.TOPBAR_MT_file_export.remove(menu_func_export)
