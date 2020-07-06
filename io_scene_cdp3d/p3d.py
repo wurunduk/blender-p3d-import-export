@@ -90,9 +90,6 @@ class P3DMesh:
 
     def __str__(self):
         formated_pos = ['{0:0.2f}'.format(i) for i in self.pos]
-        if self.name == 'det_rb1':
-            for i in self.texture_infos:
-                print(i)
         return '''{}\nflags: {} vertices: {} polys: {}
 pos: {}\nsize: {:.2f} {:.2f} {:.2f} \n'''.format(
             self.name[0] if type(self.name) is tuple else self.name, 

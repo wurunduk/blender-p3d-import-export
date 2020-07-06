@@ -43,9 +43,9 @@ CD .p3d files do not store any information about normals which means we can not 
 - correctly center meshes
 - if no .tga in material name - add it
 - automaticaly set floor
-- apply modifiers
 - save export import settings if possible
 - sanitise names of models\textures
 - apply obect mode rotation
+- ~~option to export models with applied modifiers~~
 - ~~correctly set smoothing based on material when importing~~
 - ~~error when in edit mode~~

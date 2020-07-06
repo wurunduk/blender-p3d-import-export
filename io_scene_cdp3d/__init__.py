@@ -99,36 +99,42 @@ class ExportCDP3D(bpy.types.Operator, ExportHelper):
             default=False,
             )
 
+    use_mesh_modifiers: BoolProperty(
+            name="Apply Mesh Modifiers",
+            description="Apply modifiers",
+            default=True,
+            )
+
     enable_corona: BoolProperty(
-            name = "Enable corona",
+            name = "Enable Corona",
             description="Enables corona effect for every exported lamp",
             default=False,
             )
 
     enable_flares: BoolProperty(
-            name = "Enable lens flares",
+            name = "Enable Lens Flares",
             description="Enables lens flares for every exported lamp",
             default=True,
             )
 
     enable_environment: BoolProperty(
-            name = "Light up environment",
+            name = "Light Up Environment",
             description="Static lamps will light up environemnt around",
             default=True,
             )
 
     lower_top_bound: FloatProperty(
-            name = "Lower top bound",
+            name = "Lower Top Bound",
             default = 0.0,
     )
 
     lift_bottom_bound: FloatProperty(
-            name = "Lift bottom bound",
+            name = "Lift Bottom Bound",
             default = 0.0,
     )
 
     export_log: BoolProperty(
-            name = "Export log",
+            name = "Export Log",
             description = "Create a log file of export process with useful data",
             default=True,
             )

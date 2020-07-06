@@ -64,6 +64,7 @@ def get_textures_used(ob):
 def save(operator,
          context, filepath='',
          use_selection=True,
+         use_mesh_modifiers=True,
          enable_corona=False,
          enable_flares=True,
          enable_environment=True,
@@ -86,6 +87,9 @@ def save(operator,
     if bpy.ops.object.mode_set.poll():
         bpy.ops.object.mode_set(mode='OBJECT')
 
+    # get dependencies graph for applying modifiers
+    dg = bpy.context.evaluated_depsgraph_get()
+
     col = bpy.context.scene.collection
 
     # stores the list of exported meshes - useful for modders to define in .cca
@@ -96,9 +100,10 @@ def save(operator,
     for ob in col.all_objects:
          if ob.visible_get():
             if not use_selection:
-                objects.append(ob)
+                # apply modifiers if needed and store object
+                objects.append(ob.evaluated_get(dg) if use_mesh_modifiers else ob)
             elif ob.select_get():
-                objects.append(ob)
+                objects.append(ob.evaluated_get(dg) if use_mesh_modifiers else ob)
 
     # store the list of all the used textures
     p.textures = []
@@ -162,11 +167,11 @@ def save(operator,
 
         if ob.type == 'MESH':
             m = p3d.P3DMesh()
-            # save general mesh data
+
             m.name = ob.name
             m.pos = ob.location - main_center
 
-            mesh = ob.data
+            mesh = ob.to_mesh()
 
             # save vertex positions
             scale = ob.scale

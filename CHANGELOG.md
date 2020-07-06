@@ -11,10 +11,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 ## [1.4.2]
 ### Added
 - Added p3d model info print into python console on export
+- Added option to export model with modifiers applied(Enabled by default)
 - Auto exit edit mode when exporting
 - Set correct smoothing based on material when importing
 ### Changed
 ### Fixed
+- Fixed unnecessary info printing on export
 
 ## [1.4.1] - 2020-07-04
 ### Added
