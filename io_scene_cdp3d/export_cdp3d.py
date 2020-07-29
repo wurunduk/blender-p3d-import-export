@@ -1,21 +1,3 @@
-# ##### BEGIN GPL LICENSE BLOCK #####
-#
-#  This program is free software; you can redistribute it and/or
-#  modify it under the terms of the GNU General Public License
-#  as published by the Free Software Foundation; either version 2
-#  of the License, or (at your option) any later version.
-#
-#  This program is distributed in the hope that it will be useful,
-#  but WITHOUT ANY WARRANTY; without even the implied warranty of
-#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#  GNU General Public License for more details.
-#
-#  You should have received a copy of the GNU General Public License
-#  along with this program; if not, write to the Free Software Foundation,
-#  Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
-#
-# ##### END GPL LICENSE BLOCK #####
-
 import struct
 import datetime
 import mathutils
@@ -98,16 +80,17 @@ def save(operator,
          enable_flares=True,
          enable_environment=True,
          use_empty_for_floor_level=True,
-         lower_top_bound=0.0,
-         lift_bottom_bound=0.0, 
          export_log=True):
 
     # get the folder where file will be saved and add a log in that folder
     work_path = '\\'.join(filepath.split('\\')[0:-1])
 
-    log_file = open(work_path + '//export-log.txt', 'a')
+    log_file = None
+    if export_log:
+        log_file = open(work_path + '//export-log.txt', 'a')
     date = datetime.datetime.now()
-    log_file.write('Started exporting on {}\nFile path: {}\n'.format(date.strftime('%d-%m-%Y %H:%M:%S'), filepath))
+    if log_file:
+        log_file.write('Started exporting on {}\nFile path: {}\n'.format(date.strftime('%d-%m-%Y %H:%M:%S'), filepath))
     print('\nExporting file to {}'.format(filepath))
 
     # create empty p3d model
@@ -161,16 +144,19 @@ def save(operator,
     if main is None:
         bpy.context.window_manager.popup_menu(error_no_main, title='No main mesh', icon='ERROR')
         print('!!! Failed to export p3d. No main mesh found.')
-        log_file.write('!!! Failed to export p3d. No main mesh found.\n')
-        log_file.close()
+        if log_file:
+            log_file.write('!!! Failed to export p3d. No main mesh found.\n')
+            log_file.close()
         return {'CANCELLED'}
 
     if shad is None:
         print('! Shadow mesh was not found, using main mesh for shadow.')
-        log_file.write('! Shadow mesh was not found, using main mesh for shadow.\n')
+        if log_file:
+            log_file.write('! Shadow mesh was not found, using main mesh for shadow.\n')
     if coll is None:
         print('! Collision mesh was not found, using main mesh for collisions.')
-        log_file.write('! Collision mesh was not found, using main mesh for collisions.\n')
+        if log_file:
+            log_file.write('! Collision mesh was not found, using main mesh for collisions.\n')
 
     # the main mesh in p3d is always at 0.0.
     # this means we need to move all other models alongside main mesh
@@ -238,15 +224,21 @@ def save(operator,
 
             # save model bounds
             if ob == main:
-                floor_level = bpy.data.objects['floor_level']
+                floor_level = bpy.data.objects.get('floor_level')
 
                 if floor_level is not None and use_empty_for_floor_level:
-                    m.height = -floor_level.location[2]*2
+                    fl_pos = floor_level.location
+                    m.height = -(fl_pos - main.location)[2]*2
 
-                m.height -= lower_top_bound + lift_bottom_bound
-                p.length = m.length
+                # this is size caluclation which is done in original p3d
+                # but this breaks collision for non-symmetrical tiles 
+                #p.length = m.length
+                #p.height = m.height
+                #p.depth = m.depth
+
                 p.height = m.height
-                p.depth = m.depth
+                p.length = max(highx, -lowx) * 2
+                p.depth = max(highy, -lowy) * 2
 
                 # while this looks dumb, this is how original makep3d works
                 if p.length >= 19.95 and p.length <= 20.05: p.length = 20
@@ -348,7 +340,8 @@ def save(operator,
 
             if len(m.vertices) == 0 or len(m.polys) == 0:
                 print('Can\'t export empty mesh "{}". Ignoring'.format(m.name))
-                log_file.write('Can\'t export empty mesh "{}". Ignoring'.format(m.name))
+                if log_file:
+                    log_file.write('Can\'t export empty mesh "{}". Ignoring'.format(m.name))
             else:
                 p.num_meshes += 1
                 p.meshes.append(m)
@@ -361,28 +354,28 @@ def save(operator,
     file.close()
 
     print('p3d exported')
-    log_file.write('Meshes: {}\n'.format(exported_meshes_string))
-    log_file.write('Finished p3d export.\n\n')
-    log_file.close()
+    if log_file:
+        log_file.write('Meshes: {}\n'.format(exported_meshes_string))
+        log_file.write('Finished p3d export.\n\n')
+        log_file.close()
 
     return {'FINISHED'}
 
-def save_pos(f, col, name):
+def save_pos(f, col, offset, name):
     obj = col.objects.get(name)
     pos = (0.0,0.0,0.0)
     if obj is not None:
         p = obj.location
-        pos = (p[0], p[2], p[1])
+        pos = (p[0] - offset[0], p[2] - offset[2], p[1] - offset[1])
 
     f.write('{:.4g} {:.4g} {:.4g} \t\t\t # {}{}\n'.format(pos[0], pos[1], pos[2], '!!!NOT FOUND ON EXPORT  ' if obj is None else '', name))
 
-def save_pos2(f, col, name):
+def save_pos2(f, col, offset, name):
     obj = col.objects.get(name)
-    print(obj)
     pos = (0.0,0.0,0.0)
     if obj is not None:
         p = obj.location
-        pos = (p[0], p[2], p[1])
+        pos = (p[0] - offset[0], p[2] - offset[2], p[1] - offset[1])
 
     f.write('{:.4g} \t\t\t # {}{}\n'.format(pos[2], '!!!NOT FOUND ON EXPORT  ' if obj is None else '', name))
 
@@ -394,38 +387,51 @@ def save_cca(operator,
 
     exported_meshes_string = ''
 
+    # store main, shadow and collision meshes
+    main = None
+    mpos = (0.0,0.0,0.0)
+
+    # find the main mesh of the model
     for ob in col.collection.all_objects:
         if ob.type == 'MESH':
             exported_meshes_string += ob.name + ' '
+            if ob.name == 'main':
+                main = ob
+                mpos = main.location
+
+    # p3d models must have a main mesh
+    if main is None:
+        print('!!! No main mesh found, .cca values might be wrong if main is not centered.')
+        f.write('!!! No main mesh found, .cca values might be wrong if main is not centered.')   
 
     f.write('Meshes: {}\n\n'.format(exported_meshes_string))
 
-    save_pos(f, col, 'center_of_gravity_pos')
+    save_pos(f, col, mpos, 'center_of_gravity_pos')
     f.write('\n')
-    save_pos(f, col, 'left_upper_wheel_pos')
-    save_pos(f, col, 'right_lower_wheel_pos')
-    save_pos(f, col, 'minigun_pos')
+    save_pos(f, col, mpos, 'left_upper_wheel_pos')
+    save_pos(f, col, mpos, 'right_lower_wheel_pos')
+    save_pos(f, col, mpos, 'minigun_pos')
     f.write('0.0\t\t\t # Angle of minigun (negative values for downpointing)\n')
-    save_pos(f, col, 'mines_pos')
-    save_pos(f, col, 'missiles_pos')
-    save_pos(f, col, 'driver_pos')
-    save_pos(f, col, 'exhaust_pos')
-    save_pos(f, col, 'exhaust2_pos')
-    save_pos(f, col, 'flag_pos')
-    save_pos(f, col, 'bomb_pos')
-    save_pos(f, col, 'cockpit_cam_pos')
-    save_pos(f, col, 'roof_cam_pos')
-    save_pos(f, col, 'hood_cam_pos')
-    save_pos(f, col, 'bumper_cam_pos')
-    save_pos(f, col, 'rear_view_cam_pos')
-    save_pos(f, col, 'left_side_cam_pos')
-    save_pos(f, col, 'right_side_cam_pos')
-    save_pos(f, col, 'driver1_cam_pos')
-    save_pos(f, col, 'driver2_cam_pos')
-    save_pos(f, col, 'driver3_cam_pos')
-    save_pos(f, col, 'steering_wheel_pos')
-    save_pos(f, col, 'car_cover_pos')
-    save_pos2(f, col, 'engine_pos')
+    save_pos(f, col, mpos, 'mines_pos')
+    save_pos(f, col, mpos, 'missiles_pos')
+    save_pos(f, col, mpos, 'driver_pos')
+    save_pos(f, col, mpos, 'exhaust_pos')
+    save_pos(f, col, mpos, 'exhaust2_pos')
+    save_pos(f, col, mpos, 'flag_pos')
+    save_pos(f, col, mpos, 'bomb_pos')
+    save_pos(f, col, mpos, 'cockpit_cam_pos')
+    save_pos(f, col, mpos, 'roof_cam_pos')
+    save_pos(f, col, mpos, 'hood_cam_pos')
+    save_pos(f, col, mpos, 'bumper_cam_pos')
+    save_pos(f, col, mpos, 'rear_view_cam_pos')
+    save_pos(f, col, mpos, 'left_side_cam_pos')
+    save_pos(f, col, mpos, 'right_side_cam_pos')
+    save_pos(f, col, mpos, 'driver1_cam_pos')
+    save_pos(f, col, mpos, 'driver2_cam_pos')
+    save_pos(f, col, mpos, 'driver3_cam_pos')
+    save_pos(f, col, mpos, 'steering_wheel_pos')
+    save_pos(f, col, mpos, 'car_cover_pos')
+    save_pos2(f, col, mpos, 'engine_pos')
 
     f.close()
     return {'FINISHED'}

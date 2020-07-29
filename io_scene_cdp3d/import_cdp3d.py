@@ -1,21 +1,3 @@
-# ##### BEGIN GPL LICENSE BLOCK #####
-#
-#  This program is free software; you can redistribute it and/or
-#  modify it under the terms of the GNU General Public License
-#  as published by the Free Software Foundation; either version 2
-#  of the License, or (at your option) any later version.
-#
-#  This program is distributed in the hope that it will be useful,
-#  but WITHOUT ANY WARRANTY; without even the implied warranty of
-#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#  GNU General Public License for more details.
-#
-#  You should have received a copy of the GNU General Public License
-#  along with this program; if not, write to the Free Software Foundation,
-#  Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
-#
-# ##### END GPL LICENSE BLOCK #####
-
 import os
 import time
 import struct
@@ -28,8 +10,6 @@ if 'bpy' in locals():
 import bpy
 import bmesh
 from . import p3d
-
-use_edge_split = True
 
 def texture_exists(full_path, file_name):
     #remove extension and add to path
@@ -118,7 +98,7 @@ def add_material(obj, material_name):
 
     obj.data.materials.append(material)
 
-def create_meshes(p3d_model, col):
+def create_meshes(p3d_model, col, use_edge_split_modifier, remove_doubles_distance):
     for m in p3d_model.meshes:
         mesh = bpy.data.meshes.new(name=m.name)
         obj = bpy.data.objects.new(mesh.name, mesh)
@@ -154,18 +134,19 @@ def create_meshes(p3d_model, col):
 
         uv_layer.data.foreach_set('uv', [uv for pair in [uvs[i] for i, l in enumerate(mesh.loops)] for uv in pair])
 
-        bm = bmesh.new()
-        bm.from_mesh(mesh)
+        if use_edge_split_modifier:
+            bm = bmesh.new()
+            bm.from_mesh(mesh)
 
-        for edge in bm.edges:
-            if len(edge.link_loops) == 1:
-                edge.smooth = False
+            for edge in bm.edges:
+                if len(edge.link_loops) == 1:
+                    edge.smooth = False
 
-        bmesh.ops.remove_doubles(bm, verts=bm.verts, dist=0.0001)
-        mod = obj.modifiers.new("EdgeSplit", 'EDGE_SPLIT')
-        mod.use_edge_angle = False
-        bm.to_mesh(mesh)
-        bm.free()
+            bmesh.ops.remove_doubles(bm, verts=bm.verts, dist=remove_doubles_distance)
+            mod = obj.modifiers.new("EdgeSplit", 'EDGE_SPLIT')
+            mod.use_edge_angle = False
+            bm.to_mesh(mesh)
+            bm.free()
 
 
 def create_lights(p3d_model, col):
@@ -189,6 +170,7 @@ def create_pos(col, pos, name):
 def load(operator,
          context,
          use_edge_split_modifier=True,
+         remove_doubles_distance=0.00001,
          filepath='',
          cd_path='', car_path='',
          cd_path_mod='', car_path_mod=''):
@@ -196,8 +178,6 @@ def load(operator,
     file_name = filepath.split('\\')[-1]
 
     print('\nImporting file {} from {}'.format(file_name, filepath))
-
-    use_edge_split = use_edge_split_modifier
 
     search_path = []
     if os.path.exists(cd_path):
@@ -222,7 +202,7 @@ def load(operator,
 
     add_textures(p, search_path)
     create_lights(p, col)
-    create_meshes(p, col)
+    create_meshes(p, col, use_edge_split_modifier, remove_doubles_distance)
 
     create_pos(col, (0.0, 0.0, - p.height/2.0), 'floor_level')
 

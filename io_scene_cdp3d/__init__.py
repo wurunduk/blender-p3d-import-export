@@ -1,27 +1,9 @@
-# ##### BEGIN GPL LICENSE BLOCK #####
-#
-#  This program is free software; you can redistribute it and/or
-#  modify it under the terms of the GNU General Public License
-#  as published by the Free Software Foundation; either version 2
-#  of the License, or (at your option) any later version.
-#
-#  This program is distributed in the hope that it will be useful,
-#  but WITHOUT ANY WARRANTY; without even the implied warranty of
-#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#  GNU General Public License for more details.
-#
-#  You should have received a copy of the GNU General Public License
-#  along with this program; if not, write to the Free Software Foundation,
-#  Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
-#
-# ##### END GPL LICENSE BLOCK #####
-
 bl_info = {
     "name": "Crashday p3d format",
     "author": "Wurunduk",
     "blender": (2, 83, 0),
     "location": "File > Import-Export",
-    "version": (1, 4, 2),
+    "version": (1, 4, 3),
     "support": 'COMMUNITY',
     "category": "Import-Export"}
 
@@ -69,8 +51,13 @@ class ImportCDP3D(bpy.types.Operator, ImportHelper):
     filter_glob: StringProperty(default="*.p3d", options={'HIDDEN'})
 
     use_edge_split_modifier: BoolProperty(
-        name="Use EdgeSplit modifier for hard edges, remove doubles",
+        name="Use EdgeSplit, remove doubles",
         default=True,
+    )
+
+    remove_doubles_distance: FloatProperty(
+        name="Remove doubles distance",
+        default=0.00001,
     )
 
     cd_path: StringProperty(
@@ -162,16 +149,6 @@ class ExportCDP3D(bpy.types.Operator, ExportHelper):
     use_empty_for_floor_level: BoolProperty(
         name = "Use empty 'floor_level' object to define floor level",
         default=True,
-    )
-
-    lower_top_bound: FloatProperty(
-            name = "Lower Top Bound",
-            default = 0.0,
-    )
-
-    lift_bottom_bound: FloatProperty(
-            name = "Lift Bottom Bound",
-            default = 0.0,
     )
 
     export_log: BoolProperty(

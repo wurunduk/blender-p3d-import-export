@@ -11,8 +11,8 @@ Click "Install..." button at the top and select downloaded zip file
 You can import a model in File->Import->Crashday (.p3d)  
 When importing you can also add up to four texture path's. If provided, the addon will try to load textures from these folders.  
 ### Exporting
-"Lower top bound" and "Life bottom bound" are working the same as in makep3d.  
-Also you can enable export-log which is created in the same folder as the exported file and contains export log as well as meshes list, used in .cca files.
+! Object rotation is not applied on export.
+You can enable export-log which is created in the same folder as the exported file and contains export log as well as meshes list, used in .cca files.
 ##### Lights
 When exporting you have options to turn on coronas, flares, and environment light up for all the lights.  
 Though, makep3d sets coronas to off and environment light up to on for every light, which may mean whose values are unused.  
@@ -38,7 +38,7 @@ CD .p3d files do not store any information about normals which means we can not 
 
 ## TODO:
 - when importing sort car parts into collections
-- maybe load .cca and add positions
+- ~~maybe load .cca and add positions~~
 - correctly center meshes?
 - ~~automaticaly set floor~~
 - save export import settings if possible

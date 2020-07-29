@@ -8,6 +8,16 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 ### Changed
 ### Fixed
 
+## [1.4.3] 2020-07-30
+### Added
+- Removed lower top and bottom bounds option
+- Carinfo export will now center positions if main object is present
+### Fixed
+- Removed a crash when no 'floor_level' was present
+- Collision box sizes are calculated using main mesh properly for non-symmetrical objects
+- Fixed 'remove doubles' option
+- Fixed export log creation even with 'export-log' option turned off
+
 ## [1.4.2] 2020-07-06
 ### Added
 - Added carinfo.cca import, carinfo.txt export for managing positions and mesh list
