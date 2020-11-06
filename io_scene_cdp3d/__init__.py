@@ -22,7 +22,7 @@ classes = [
     gui.EXPORT_OT_cdcca,
     gui.EXPORT_OT_cdp3d,
     gui.MATERIAL_PT_p3d_materials,
-    gui.LIGHT_PT_p3d_lights,
+    gui.DATA_PT_p3d_lights,
     gui.CDP3DMaterialProps,
     gui.CDP3DLightProps
 ]
