@@ -118,24 +118,6 @@ class EXPORT_OT_cdp3d(bpy.types.Operator, ExportHelper):
         default     = True
     )
 
-    enable_corona: BoolProperty(
-        name        = "Enable Corona",
-        description = "Enables corona effect for every exported lamp",
-        default     = False
-    )
-
-    enable_flares: BoolProperty(
-        name        = "Enable Lens Flares",
-        description = "Enables lens flares for every exported lamp",
-        default     = True
-    )
-
-    enable_environment: BoolProperty(
-        name        = "Light Up Environment",
-        description = "Static lamps will light up environemnt around",
-        default     = True
-    )
-
     use_empty_for_floor_level: BoolProperty(
         name        = "Use empty 'floor_level' object to define floor level",
         default     = True

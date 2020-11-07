@@ -49,9 +49,6 @@ def save(operator,
          context, filepath='',
          use_selection=True,
          use_mesh_modifiers=True,
-         enable_corona=False,
-         enable_flares=True,
-         enable_environment=True,
          use_empty_for_floor_level=True,
          export_log=True):
 
