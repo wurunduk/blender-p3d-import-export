@@ -7,14 +7,6 @@ def int_to_color(value):
 def color_to_int(value):
     return int('%02x%02x%02x' % (int(value[0]*255), int(value[1]*255), int(value[2]*255)), 16)
 
-class P3DMaterial(Enum):
-    FLAT = 0,
-    FLAT_METAL = 1,
-    GOURAUD = 2,
-    GOURAUD_METAL = 3,
-    GOURAUD_METAL_ENV = 4,
-    SHINING = 5
-
 class P3DTextureInfo:
     texture_start = 0
     num_flat = 0
@@ -38,14 +30,14 @@ class P3DLight:
 
     show_corona = True
     show_lens_flares = True
-    Lightup_environment = True
+    lightup_environment = True
 
     def __str__(self):
         formated_pos = ['{0:0.2f}'.format(i) for i in self.pos]
-        return '''{}\nrange: {:.2f} color: {}\ncorona {} flares {} environment {}\npos: {}\n'''.format(
+        return '''{}\nrange: {:.2f}, color: {}\ncorona {}, flares {}, environment {}\npos: {}\n'''.format(
             self.name[0] if type(self.name) is tuple else self.name, 
             self.range, int_to_color(self.color), 
-            self.show_corona, self.show_lens_flares, self.Lightup_environment,
+            self.show_corona, self.show_lens_flares, self.lightup_environment,
             formated_pos
         )
 
@@ -90,7 +82,7 @@ class P3DMesh:
 
     def __str__(self):
         formated_pos = ['{0:0.2f}'.format(i) for i in self.pos]
-        return '''{}\nflags: {} vertices: {} polys: {}
+        return '''{}\nflags: {}, vertices: {}, polys: {}
 pos: {}\nsize: {:.2f} {:.2f} {:.2f} \n'''.format(
             self.name[0] if type(self.name) is tuple else self.name, 
             self.flags, self.num_vertices, self.num_polys,
@@ -141,7 +133,10 @@ class P3D:
         self.textures = []
         for i in range(self.num_textures):
             self.textures.append('')
-            self.textures[i] = read_null_string(file)
+            tex_name = read_null_string(file)
+            if tex_name.endswith('.tga'):
+                tex_name = tex_name[0:-4]
+            self.textures[i] = tex_name
 
         #lights list
         file.read(10)
@@ -156,7 +151,7 @@ class P3D:
 
             self.lights[i].show_corona = read_byte(file)
             self.lights[i].show_lens_flares = read_byte(file)
-            self.lights[i].Lightup_environment = read_byte(file)
+            self.lights[i].lightup_environment = read_byte(file)
 
         #meshes list
         file.read(10)
@@ -215,49 +210,49 @@ class P3D:
                 polys_in_tex = j.texture_start
 
                 for n in range(j.num_flat):
-                    if((P3DMaterial.FLAT, self.textures[ji]) not in self.meshes[i].materials_used):
-                        self.meshes[i].materials_used.append((P3DMaterial.FLAT, self.textures[ji]))
-                    self.meshes[i].polys[polys_in_tex + n].material = P3DMaterial.FLAT
+                    if(('FLAT', self.textures[ji]) not in self.meshes[i].materials_used):
+                        self.meshes[i].materials_used.append(('FLAT', self.textures[ji]))
+                    self.meshes[i].polys[polys_in_tex + n].material = 'FLAT'
                     self.meshes[i].polys[polys_in_tex + n].texture = self.textures[ji]
 
                 polys_in_tex += j.num_flat
 
                 for n in range(j.num_flat_metal):
-                    if((P3DMaterial.FLAT_METAL, self.textures[ji]) not in self.meshes[i].materials_used):
-                        self.meshes[i].materials_used.append((P3DMaterial.FLAT_METAL, self.textures[ji]))
-                    self.meshes[i].polys[polys_in_tex + n].material = P3DMaterial.FLAT_METAL
+                    if(('FLAT_METAL', self.textures[ji]) not in self.meshes[i].materials_used):
+                        self.meshes[i].materials_used.append(('FLAT_METAL', self.textures[ji]))
+                    self.meshes[i].polys[polys_in_tex + n].material = 'FLAT_METAL'
                     self.meshes[i].polys[polys_in_tex + n].texture = self.textures[ji]
 
                 polys_in_tex += j.num_flat_metal
 
                 for n in range(j.num_gouraud):
-                    if((P3DMaterial.GOURAUD, self.textures[ji]) not in self.meshes[i].materials_used):
-                        self.meshes[i].materials_used.append((P3DMaterial.GOURAUD, self.textures[ji]))
-                    self.meshes[i].polys[polys_in_tex + n].material = P3DMaterial.GOURAUD
+                    if(('GOURAUD', self.textures[ji]) not in self.meshes[i].materials_used):
+                        self.meshes[i].materials_used.append(('GOURAUD', self.textures[ji]))
+                    self.meshes[i].polys[polys_in_tex + n].material = 'GOURAUD'
                     self.meshes[i].polys[polys_in_tex + n].texture = self.textures[ji]
 
                 polys_in_tex += j.num_gouraud
 
                 for n in range(j.num_gouraud_metal):
-                    if((P3DMaterial.GOURAUD_METAL, self.textures[ji]) not in self.meshes[i].materials_used):
-                        self.meshes[i].materials_used.append((P3DMaterial.GOURAUD_METAL, self.textures[ji]))
-                    self.meshes[i].polys[polys_in_tex + n].material = P3DMaterial.GOURAUD_METAL
+                    if(('GOURAUD_METAL', self.textures[ji]) not in self.meshes[i].materials_used):
+                        self.meshes[i].materials_used.append(('GOURAUD_METAL', self.textures[ji]))
+                    self.meshes[i].polys[polys_in_tex + n].material = 'GOURAUD_METAL'
                     self.meshes[i].polys[polys_in_tex + n].texture = self.textures[ji]
 
                 polys_in_tex += j.num_gouraud_metal
 
                 for n in range(j.num_gouraud_metal_env):
-                    if((P3DMaterial.GOURAUD_METAL_ENV, self.textures[ji]) not in self.meshes[i].materials_used):
-                        self.meshes[i].materials_used.append((P3DMaterial.GOURAUD_METAL_ENV, self.textures[ji]))
-                    self.meshes[i].polys[polys_in_tex + n].material = P3DMaterial.GOURAUD_METAL_ENV
+                    if(('GOURAUD_METAL_ENV', self.textures[ji]) not in self.meshes[i].materials_used):
+                        self.meshes[i].materials_used.append(('GOURAUD_METAL_ENV', self.textures[ji]))
+                    self.meshes[i].polys[polys_in_tex + n].material = 'GOURAUD_METAL_ENV'
                     self.meshes[i].polys[polys_in_tex + n].texture = self.textures[ji]
 
                 polys_in_tex += j.num_gouraud_metal_env    
 
                 for n in range(j.num_shining):
-                    if((P3DMaterial.SHINING, self.textures[ji]) not in self.meshes[i].materials_used):
-                        self.meshes[i].materials_used.append((P3DMaterial.SHINING, self.textures[ji]))
-                    self.meshes[i].polys[polys_in_tex + n].material = P3DMaterial.SHINING
+                    if(('SHINING', self.textures[ji]) not in self.meshes[i].materials_used):
+                        self.meshes[i].materials_used.append(('SHINING', self.textures[ji]))
+                    self.meshes[i].polys[polys_in_tex + n].material = 'SHINING'
                     self.meshes[i].polys[polys_in_tex + n].texture = self.textures[ji]
 
         file.read(8)
@@ -274,7 +269,8 @@ class P3D:
         write_uint(file, 1337)
         write_byte(file, self.num_textures)
         for i in range(self.num_textures):
-            write_null_string(file, sanitise_string(self.textures[i].lower()))
+            tn = self.textures[i] + '.tga'
+            write_null_string(file, sanitise_string(tn.lower()))
 
         #lights list
         write_string(file, b'LIGHTS')
@@ -288,7 +284,7 @@ class P3D:
 
             write_byte(file, self.lights[i].show_corona)
             write_byte(file, self.lights[i].show_lens_flares)
-            write_byte(file, self.lights[i].Lightup_environment)
+            write_byte(file, self.lights[i].lightup_environment)
 
         #meshes list
         write_string(file, b'MESHES')

@@ -40,22 +40,8 @@ def add_textures(p3d_model, paths):
                 texture.image = img
                 break
 
-def get_material_name(type_name):
-    t = type_name[0]
-    s = ''
-    if t == p3d.P3DMaterial.FLAT:
-        s = 'f_'
-    elif t == p3d.P3DMaterial.FLAT_METAL:
-        s = 'fm_'
-    elif t == p3d.P3DMaterial.GOURAUD:
-        s = 'g_'
-    elif t == p3d.P3DMaterial.GOURAUD_METAL:
-        s = 'gm_'
-    elif t == p3d.P3DMaterial.GOURAUD_METAL_ENV:
-        s = 'gme_'
-    elif t == p3d.P3DMaterial.SHINING:
-        s = 's_'
-    return s + type_name[1]
+def get_material_name(material_name):
+    return material_name[1] + ' ' + material_name[0].lower()
 
 def add_material(obj, material_name):
     material = bpy.data.materials.get(get_material_name(material_name))
@@ -63,33 +49,36 @@ def add_material(obj, material_name):
     if material is None:
         material = bpy.data.materials.new(get_material_name(material_name))
 
+        material.cdp3d.material_name = material_name[1]
+        material.cdp3d.material_type = material_name[0]
+
         material.use_nodes = True
         principled_bsdf = material.node_tree.nodes.get('Principled BSDF')
 
         texImage = material.node_tree.nodes.new('ShaderNodeTexImage')
         texImage.image = bpy.data.textures.get( material_name[1]).image
 
-        if(material_name[0] == p3d.P3DMaterial.FLAT):
+        if(material_name[0] == 'FLAT'):
             principled_bsdf.inputs['Metallic'].default_value  = 0.0
             principled_bsdf.inputs['Specular'].default_value = 1.0
             principled_bsdf.inputs['Roughness'].default_value = 1.0
-        elif(material_name[0] == p3d.P3DMaterial.FLAT_METAL):
+        elif(material_name[0] == 'FLAT_METAL'):
             principled_bsdf.inputs['Metallic'].default_value = 1.0
             principled_bsdf.inputs['Specular'].default_value = .9
             principled_bsdf.inputs['Roughness'].default_value = .9
-        elif(material_name[0] == p3d.P3DMaterial.GOURAUD):
+        elif(material_name[0] == 'GOURAUD'):
             principled_bsdf.inputs['Metallic'].default_value = 0.0
             principled_bsdf.inputs['Specular'].default_value = 0.1
             principled_bsdf.inputs['Roughness'].default_value = 0.8
-        elif(material_name[0] == p3d.P3DMaterial.GOURAUD_METAL):
+        elif(material_name[0] == 'GOURAUD_METAL'):
             principled_bsdf.inputs['Metallic'].default_value = .8
             principled_bsdf.inputs['Specular'].default_value = .5
             principled_bsdf.inputs['Roughness'].default_value = .2
-        elif(material_name[0] == p3d.P3DMaterial.GOURAUD_METAL_ENV):
+        elif(material_name[0] == 'GOURAUD_METAL_ENV'):
             principled_bsdf.inputs['Metallic'].default_value = .5
             principled_bsdf.inputs['Specular'].default_value = .3
             principled_bsdf.inputs['Roughness'].default_value = .05
-        elif(material_name[0] == p3d.P3DMaterial.SHINING):
+        elif(material_name[0] == 'SHINING'):
             principled_bsdf.inputs['Metallic'].default_value = 1.0
             principled_bsdf.inputs['Specular'].default_value = .2
             principled_bsdf.inputs['Roughness'].default_value = .0
@@ -126,7 +115,7 @@ def create_meshes(p3d_model, col, use_edge_split_modifier, remove_doubles_distan
         for i, f in enumerate(mesh.polygons):
             mat_ind = [(j, item) for j, item in enumerate(m.materials_used) if item[1] == m.polys[i].texture and item[0] == m.polys[i].material]
             f.material_index = mat_ind[0][0]
-            if  mat_ind[0][1][0] == p3d.P3DMaterial.GOURAUD or mat_ind[0][1][0] == p3d.P3DMaterial.GOURAUD_METAL or mat_ind[0][1][0] == p3d.P3DMaterial.GOURAUD_METAL_ENV:
+            if  mat_ind[0][1][0] == 'GOURAUD' or mat_ind[0][1][0] == 'GOURAUD_METAL' or mat_ind[0][1][0] == 'GOURAUD_METAL_ENV':
                 f.use_smooth = True
 
         uv_layer = mesh.uv_layers.new(do_init=False)
@@ -154,6 +143,10 @@ def create_lights(p3d_model, col):
         new_light = bpy.data.lights.new(name=l.name, type='POINT')
         new_light.color = p3d.int_to_color(l.color)
         new_light.energy = l.range
+
+        new_light.cdp3d.corona = l.show_corona
+        new_light.cdp3d.lens_flares = l.show_lens_flares
+        new_light.cdp3d.lightup_environment = l.lightup_environment
 
         light_object = bpy.data.objects.new(new_light.name, new_light)
         light_object.location = l.pos

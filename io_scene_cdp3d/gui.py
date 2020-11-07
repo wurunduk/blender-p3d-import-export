@@ -30,7 +30,7 @@ class IMPORT_OT_cdcca(bpy.types.Operator, ImportHelper):
 
     def execute(self, context):
         from . import import_cdp3d
-        keywords = self.as_keywords(ignore=("filter_glob"))
+        keywords = self.as_keywords(ignore=("filter_glob",))
 
         return import_cdp3d.load_cca(self, context, **keywords)
 
@@ -76,7 +76,7 @@ class IMPORT_OT_cdp3d(bpy.types.Operator, ImportHelper):
 
     def execute(self, context):
         from . import import_cdp3d
-        keywords = self.as_keywords(ignore=("filter_glob"))
+        keywords = self.as_keywords(ignore=("filter_glob",))
 
         return import_cdp3d.load(self, context, **keywords)
 
@@ -170,6 +170,7 @@ class MATERIAL_PT_p3d_materials(bpy.types.Panel):
         layout = self.layout
         settings = context.material.cdp3d
 
+        layout.prop(settings, "material_name")
         layout.prop(settings, "material_type", text="Material Type")
 
 
@@ -181,7 +182,7 @@ class DATA_PT_p3d_lights(bpy.types.Panel):
     bl_context     = "data"
 
     def draw(self, context):
-        if not context.light.cdp3d:
+        if not context.light or not context.light.cdp3d:
             return
         
         layout = self.layout
@@ -198,7 +199,13 @@ class DATA_PT_p3d_lights(bpy.types.Panel):
 
 class CDP3DMaterialProps(bpy.types.PropertyGroup):
     
-    material_type : bpy.props.EnumProperty(
+    material_name   : bpy.props.StringProperty (
+        name        = 'Texture Name',
+        default     = 'colwhite',
+        description = 'Name of the .tga or .dds texture to be used'
+    )
+
+    material_type   : bpy.props.EnumProperty(
         name        = 'Material Type',
         items       = (
             ('FLAT', 'Flat', 'Flat shading'),

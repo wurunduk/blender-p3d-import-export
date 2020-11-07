@@ -13,38 +13,8 @@ from . import p3d
 def error_no_main(self, context):
     self.layout.label(text='Every CD model must have a main mesh!')
 
-def sanitise_material(name):
-    if name.endswith('.tga'):
-        name = name[:-4]
-    name = name.replace('.', '_')
-    name = name.replace(' ', '_')
-    if not name.endswith('.tga'):
-        name += '.tga'
-    return name
-
 def sanitise_mesh_name(name):
     return name.replace(' ', '_')
-
-def get_material_type_name(name):
-    ar = name.split('_', 1)
-    t = ar[0]
-    if len(ar) == 1:
-        return (p3d.P3DMaterial.GOURAUD, name)
-    else:
-        if t == 'f':
-            t = p3d.P3DMaterial.FLAT
-        if t == 'fm':
-            t = p3d.P3DMaterial.FLAT_METAL
-        if t == 'g':
-            t = p3d.P3DMaterial.GOURAUD
-        if t == 'gm':
-            t = p3d.P3DMaterial.GOURAUD_METAL
-        if t == 'gme':
-            t = p3d.P3DMaterial.GOURAUD_METAL_ENV
-        if t == 's':
-            t = p3d.P3DMaterial.SHINING
-    
-    return (t, sanitise_material(ar[1]))
 
 def get_textures_used(ob):
     textures = []
@@ -59,14 +29,17 @@ def get_textures_used(ob):
 
     # if no material was found, add default colwhite.tga material to the object
     if m is None:
-        col_white = bpy.data.materials.get('f_colwhite.tga')
+        col_white = bpy.data.materials.get('empty material')
         if col_white is None:
-            col_white = bpy.data.materials.new('f_colwhite.tga')
+            col_white = bpy.data.materials.new('empty material')
+
+            col_white.cdp3d.material_name = 'colwhite'
+            col_white.cdp3d.material_type = 'FLAT'
 
         ob.data.materials.append(col_white)
 
     for mat in ob.data.materials:
-        tn = get_material_type_name(mat.name)[1]
+        tn = mat.cdp3d.material_name
         if tn not in textures:
             textures.append(tn)
 
@@ -175,9 +148,11 @@ def save(operator,
             light.range = ob.data.energy
             light.color = p3d.color_to_int(ob.data.color)
 
-            light.show_corona = enable_corona
-            light.show_lens_flares = enable_flares
-            light.Lightup_environment = enable_environment
+            print(ob.data.cdp3d)
+
+            light.show_corona = ob.data.cdp3d.corona
+            light.show_lens_flares = ob.data.cdp3d.lens_flares
+            light.lightup_environment = ob.data.cdp3d.lightup_environment
 
             p.lights.append(light)
 
@@ -272,19 +247,20 @@ def save(operator,
                     pol = p3d.P3DPolygon()
 
                     # texture info
-                    pol.material, pol.texture = get_material_type_name(ob.data.materials[tri.material_index].name)
+                    pol.texture = ob.data.materials[tri.material_index].cdp3d.material_name
+                    pol.material = ob.data.materials[tri.material_index].cdp3d.material_type
                     i = p.textures.index(pol.texture)
-                    if pol.material == p3d.P3DMaterial.FLAT:
+                    if pol.material == 'FLAT':
                         m.texture_infos[i].num_flat += 1
-                    if pol.material == p3d.P3DMaterial.FLAT_METAL:
+                    if pol.material == 'FLAT_METAL':
                         m.texture_infos[i].num_flat_metal += 1
-                    if pol.material == p3d.P3DMaterial.GOURAUD:
+                    if pol.material == 'GOURAUD':
                         m.texture_infos[i].num_gouraud += 1
-                    if pol.material == p3d.P3DMaterial.GOURAUD_METAL:
+                    if pol.material == 'GOURAUD_METAL':
                         m.texture_infos[i].num_gouraud_metal += 1
-                    if pol.material == p3d.P3DMaterial.GOURAUD_METAL_ENV:
+                    if pol.material == 'GOURAUD_METAL_ENV':
                         m.texture_infos[i].num_gouraud_metal_env += 1
-                    if pol.material == p3d.P3DMaterial.SHINING:
+                    if pol.material == 'SHINING':
                         m.texture_infos[i].num_shining += 1
 
                     # polygon info
@@ -312,27 +288,27 @@ def save(operator,
                     m.texture_infos[t].texture_start += m.texture_infos[t-1].num_shining
 
                 for i, pol in enumerate(polys):
-                    if pol.texture == p.textures[t] and pol.material == p3d.P3DMaterial.FLAT:
+                    if pol.texture == p.textures[t] and pol.material == 'FLAT':
                         m.polys.append(pol)
                 
                 for i, pol in enumerate(polys):
-                    if pol.texture == p.textures[t] and pol.material == p3d.P3DMaterial.FLAT_METAL:
+                    if pol.texture == p.textures[t] and pol.material == 'FLAT_METAL':
                         m.polys.append(pol)
 
                 for i, pol in enumerate(polys):
-                    if pol.texture == p.textures[t] and pol.material == p3d.P3DMaterial.GOURAUD:
+                    if pol.texture == p.textures[t] and pol.material == 'GOURAUD':
                         m.polys.append(pol)
 
                 for i, pol in enumerate(polys):
-                    if pol.texture == p.textures[t] and pol.material == p3d.P3DMaterial.GOURAUD_METAL:
+                    if pol.texture == p.textures[t] and pol.material == 'GOURAUD_METAL':
                         m.polys.append(pol)
 
                 for i, pol in enumerate(polys):
-                    if pol.texture == p.textures[t] and pol.material == p3d.P3DMaterial.GOURAUD_METAL_ENV:
+                    if pol.texture == p.textures[t] and pol.material == 'GOURAUD_METAL_ENV':
                         m.polys.append(pol)
 
                 for i, pol in enumerate(polys):
-                    if pol.texture == p.textures[t] and pol.material == p3d.P3DMaterial.SHINING:
+                    if pol.texture == p.textures[t] and pol.material == 'SHINING':
                         m.polys.append(pol)
 
 

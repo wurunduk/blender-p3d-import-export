@@ -4,6 +4,12 @@ if "bpy" in locals():
     import importlib
     if "gui" in locals():
         importlib.reload(gui)
+    if "import_cdp3d" in locals():
+        importlib.reload(import_cdp3d)
+    if "export_cdp3d" in locals():
+        importlib.reload(export_cdp3d)
+    if "p3d" in locals():
+        importlib.reload(p3d)
 
 from . import gui
 
