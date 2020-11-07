@@ -8,13 +8,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 ### Changed
 ### Fixed
 
-## [1.5.0]
+## [1.5.0] 2020-11-07
 ### Added
 - Added "CDRE - Light" panel in Light settings for setting up light export settings for each light. Includes color, range, corona, lens flares and environment lighting options.
 ### Changed
 - Material names are not exported and can be anything now
 - Added a "CDRE - Material" panel for each material, containing material type and texture name (no extensions needed)
-### Fixed
 
 ## [1.4.3] 2020-07-30
 ### Added
