@@ -50,7 +50,8 @@ def save(operator,
          use_selection=True,
          use_mesh_modifiers=True,
          use_empty_for_floor_level=True,
-         export_log=True):
+         export_log=True,
+         force_main_mesh=True):
 
     # get the folder where file will be saved and add a log in that folder
     work_path = '\\'.join(filepath.split('\\')[0:-1])
@@ -96,12 +97,19 @@ def save(operator,
     shad = None
     coll = None
 
+    main_like = None
+    any = None
+
     # find the main, sadow and coll mesh of the model
     for ob in objects:
         if ob.type == 'MESH':
+            any = ob
             p.textures = list(set(p.textures + get_textures_used(ob)))
+            if 'main' in ob.name:
+                main_like = ob
             if ob.name == 'main':
                 main = ob
+                main_like = ob
             if ob.name == 'mainshad':
                 shad = ob
             if ob.name == 'maincoll':
@@ -112,12 +120,26 @@ def save(operator,
 
     # p3d models must have a main mesh
     if main is None:
-        bpy.context.window_manager.popup_menu(error_no_main, title='No main mesh', icon='ERROR')
-        print('!!! Failed to export p3d. No main mesh found.')
-        if log_file:
-            log_file.write('!!! Failed to export p3d. No main mesh found.\n')
-            log_file.close()
-        return {'CANCELLED'}
+        if not force_main_mesh:
+            bpy.context.window_manager.popup_menu(error_no_main, title='No main mesh', icon='ERROR')
+            print('!!! Failed to export p3d. No main mesh found.')
+            if log_file:
+                log_file.write('!!! Failed to export p3d. No main mesh found.\n')
+                log_file.close()
+            return {'CANCELLED'}
+        else:
+            if main_like is not None:
+                print('Found main mesh: {}. Using as main'.format(main_like.name))
+                main = main_like
+            elif any is not None:
+                print('Found some mesh: {}. Using as main'.format(any.name))
+                main = any
+            else:
+                print('!!! Failed to export p3d. No meshes found.')
+                if log_file:
+                    log_file.write('!!! Failed to export p3d. No meshes found.\n')
+                    log_file.close()
+                return {'CANCELLED'}
 
     if shad is None:
         print('! Shadow mesh was not found, using main mesh for shadow.')
@@ -144,8 +166,6 @@ def save(operator,
             light.pos = ob.location - main_center
             light.range = ob.data.energy
             light.color = p3d.color_to_int(ob.data.color)
-
-            print(ob.data.cdp3d)
 
             light.show_corona = ob.data.cdp3d.corona
             light.show_lens_flares = ob.data.cdp3d.lens_flares
@@ -198,6 +218,8 @@ def save(operator,
             if ob == main:
                 floor_level = bpy.data.objects.get('floor_level')
 
+                m.name = sanitise_mesh_name('main')
+
                 if floor_level is not None and use_empty_for_floor_level:
                     fl_pos = floor_level.location
                     m.height = -(fl_pos - main.location)[2]*2
@@ -246,6 +268,7 @@ def save(operator,
                     # texture info
                     pol.texture = ob.data.materials[tri.material_index].cdp3d.material_name
                     pol.material = ob.data.materials[tri.material_index].cdp3d.material_type
+                    
                     i = p.textures.index(pol.texture)
                     if pol.material == 'FLAT':
                         m.texture_infos[i].num_flat += 1
@@ -312,9 +335,10 @@ def save(operator,
             m.num_polys = len(m.polys)
 
             if len(m.vertices) == 0 or len(m.polys) == 0:
-                print('Can\'t export empty mesh "{}". Ignoring'.format(m.name))
+                message = 'Can\'t export empty mesh "{}". {} vertices, {} polys. Ignoring'.format(m.name, len(m.vertices), len(m.polys))
+                print(message)
                 if log_file:
-                    log_file.write('Can\'t export empty mesh "{}". Ignoring'.format(m.name))
+                    log_file.write(message)
             else:
                 p.num_meshes += 1
                 p.meshes.append(m)
