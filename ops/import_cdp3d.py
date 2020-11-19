@@ -98,6 +98,8 @@ def create_meshes(p3d_model, col, use_edge_split_modifier, remove_doubles_distan
         # if "coll" in m.name or "shad" in m.name or "lod" in m.name or "." in m.name:
         #     obj.hide_set(True)
 
+        mesh.cdp3d.collisions = m.flags & 2
+
         for t in m.materials_used:
             add_material(obj, t)
 

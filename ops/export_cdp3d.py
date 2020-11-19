@@ -243,19 +243,24 @@ def save(operator,
                 if p.depth >= 19.95 and p.depth <= 20.05: p.depth = 20
                 if p.depth >= 39.95 and p.depth <= 40.05: p.depth = 40
 
+            if mesh.cdp3d.collisions:
+                m.flags = 2
+            else:
+                m.flags = 0
+
             # save the flags
             if ob == main:
-                m.flags |= 3
+                m.flags |= 1
                 if shad is None:
                     m.flags |= 4
                 if coll is None:
                     m.flags |= 8
             elif ob == shad:
+                m.flags ^= 2
                 m.flags |= 4
             elif ob == coll:
+                m.flags ^= 2
                 m.flags |= 8
-            else:
-                m.flags |= 2
 
             mesh.calc_loop_triangles()
 

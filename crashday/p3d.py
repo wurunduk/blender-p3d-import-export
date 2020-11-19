@@ -111,9 +111,9 @@ class Polygon:
 
     def read(self, file):
         (self.p1, self.u1, self.v1,
-        self.p2, self.u2, self.v2,
-        self.p3, self.u3, 
-        self.v3) = rf(file, '<H2fH2fH2f')
+        self.p3, self.u3, self.v3,
+        self.p2, self.u2, self.v2
+        ) = rf(file, '<H2fH2fH2f')
 
         self.v1 = 1.0 - self.v1
         self.v2 = 1.0 - self.v2
@@ -122,8 +122,8 @@ class Polygon:
     def write(self, file):
         wf(file, '<H2fH2fH2f', 
         self.p1, self.u1, 1.0 - self.v1,
-        self.p2, self.u2, 1.0 - self.v2,
-        self.p3, self.u3, 1.0 - self.v3
+        self.p3, self.u3, 1.0 - self.v3,
+        self.p2, self.u2, 1.0 - self.v2
         )
 
 class Mesh:
