@@ -1,15 +1,15 @@
-import os
+import bpy, bmesh, os
 import time
 import struct
 
+from ..crashday import p3d
+
 if 'bpy' in locals():
     import importlib
-    if 'p3d' in locals():
-        importlib.reload(p3d)
+    importlib.reload(p3d)
 
-import bpy
-import bmesh
-from . import p3d
+def int_to_color(value):
+    return (((value >> 16) & 255)/255.0, ((value >> 8) & 255)/255.0, (value & 255)/255.0)
 
 def texture_exists(full_path, file_name):
     #remove extension and add to path
@@ -141,7 +141,7 @@ def create_meshes(p3d_model, col, use_edge_split_modifier, remove_doubles_distan
 def create_lights(p3d_model, col):
     for l in p3d_model.lights:
         new_light = bpy.data.lights.new(name=l.name, type='POINT')
-        new_light.color = p3d.int_to_color(l.color)
+        new_light.color = int_to_color(l.color)
         new_light.energy = l.range
 
         new_light.cdp3d.corona = l.show_corona
@@ -185,7 +185,7 @@ def load(operator,
     p = p3d.P3D()
 
     file = open(filepath, 'rb')
-    p.load(file)
+    p.read(file)
     file.close()
 
     print(p)

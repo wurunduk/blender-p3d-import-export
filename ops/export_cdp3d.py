@@ -1,14 +1,17 @@
+import bpy
 import struct
 import datetime
 import mathutils
 
+from ..crashday import p3d
+
 if 'bpy' in locals():
     import importlib
-    if 'p3d' in locals():
-        importlib.reload(p3d)
+    importlib.reload(p3d)
 
-import bpy
-from . import p3d
+
+def color_to_int(value):
+    return int('%02x%02x%02x' % (int(value[0]*255), int(value[1]*255), int(value[2]*255)), 16)
 
 def error_no_main(self, context):
     self.layout.label(text='Every CD model must have a main mesh!')
@@ -161,11 +164,11 @@ def save(operator,
         if ob.type == 'LIGHT':
             p.num_lights += 1
 
-            light = p3d.P3DLight()
+            light = p3d.Light()
             light.name = sanitise_mesh_name(ob.name)
             light.pos = ob.location - main_center
             light.range = ob.data.energy
-            light.color = p3d.color_to_int(ob.data.color)
+            light.color = color_to_int(ob.data.color)
 
             light.show_corona = ob.data.cdp3d.corona
             light.show_lens_flares = ob.data.cdp3d.lens_flares
@@ -174,7 +177,7 @@ def save(operator,
             p.lights.append(light)
 
         if ob.type == 'MESH':
-            m = p3d.P3DMesh()
+            m = p3d.Mesh()
 
             m.name = sanitise_mesh_name(ob.name)
             m.pos = ob.location - main_center
@@ -224,7 +227,7 @@ def save(operator,
                     fl_pos = floor_level.location
                     m.height = -(fl_pos - main.location)[2]*2
 
-                # this is size caluclation which is done in original p3d
+                # this is size calculation which is done in original p3d
                 # but this breaks collision for non-symmetrical tiles 
                 #p.length = m.length
                 #p.height = m.height
@@ -257,13 +260,13 @@ def save(operator,
             mesh.calc_loop_triangles()
 
             # save polys in blender order and texture infos
-            m.texture_infos = [p3d.P3DTextureInfo() for i in range(p.num_textures)]
+            m.texture_infos = [p3d.TextureInfo() for i in range(p.num_textures)]
             polys = []
             for uv_layer in mesh.uv_layers:
                 for tri in mesh.loop_triangles:
                     if len(tri.loops) != 3:
                         break
-                    pol = p3d.P3DPolygon()
+                    pol = p3d.Polygon()
 
                     # texture info
                     pol.texture = ob.data.materials[tri.material_index].cdp3d.material_name
@@ -347,7 +350,7 @@ def save(operator,
     # save p3d into file
     file = open(filepath, 'wb')
     print(p)
-    p.save(file)
+    p.write(file)
     file.close()
 
     print('p3d exported')

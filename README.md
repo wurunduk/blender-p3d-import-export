@@ -27,13 +27,14 @@ There is no need to add an extension to the texture name, but remember CD uses .
 CD .p3d files do not store any information about normals which means we can not change how smoothing works(only by using pre-set material types). While Flat materials will show triangles and all the edges will look hard, Gouraud materials will smooth everything. Sometimes it is needed to create a hard edge on smooth surface. The CD way to do this is to split the edge.
 
 ## TODO:
+- dimensions in .p3d mesh are read in the wrong order
 - print error when no uv unrap was present, or create a default one
 - when importing sort car parts into collections
-- ~~maybe load .cca and add positions~~
-- correctly center meshes?
-- ~~automaticaly set floor~~
 - save export import settings if possible
 - apply obect mode rotation
+- correctly center meshes?
+- ~~maybe load .cca and add positions~~
+- ~~automaticaly set floor~~
 - ~~check if no material is on object~~
 - ~~option to export models with applied modifiers~~
 - ~~correctly set smoothing based on material when importing~~

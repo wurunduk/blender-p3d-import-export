@@ -8,6 +8,10 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 ### Changed
 ### Fixed
 
+## [1.6.0]
+### Changed
+- Changed plugin mesh limits from 32k to 65k. If models start to crash CD, pls report!
+
 ## [1.5.1] 2020-11-19
 ### Added
 - Added support for .trk exporter
