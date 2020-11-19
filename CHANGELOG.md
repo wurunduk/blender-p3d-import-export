@@ -8,6 +8,10 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 ### Changed
 ### Fixed
 
+## [1.5.1] 2020-11-19
+### Added
+- Added support for .trk exporter
+
 ## [1.5.0] 2020-11-07
 ### Added
 - Added "CDRE - Light" panel in Light settings for setting up light export settings for each light. Includes color, range, corona, lens flares and environment lighting options.
