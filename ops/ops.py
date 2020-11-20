@@ -120,7 +120,7 @@ class EXPORT_OT_cdp3d(bpy.types.Operator, ExportHelper):
     )
 
     use_empty_for_floor_level: BoolProperty(
-        name        = 'Use empty 'floor_level' object to define floor level',
+        name        = 'Use empty \'floor_level\' object to define floor level',
         default     = True
     )
 
