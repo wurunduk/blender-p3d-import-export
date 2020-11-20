@@ -95,7 +95,7 @@ def create_meshes(p3d_model, col, use_edge_split_modifier, remove_doubles_distan
 
         col.objects.link(obj)
 
-        # if "coll" in m.name or "shad" in m.name or "lod" in m.name or "." in m.name:
+        # if 'coll' in m.name or 'shad' in m.name or 'lod' in m.name or '.' in m.name:
         #     obj.hide_set(True)
 
         mesh.cdp3d.collisions = True # not bool(m.flags & 8388608)
@@ -134,7 +134,7 @@ def create_meshes(p3d_model, col, use_edge_split_modifier, remove_doubles_distan
                     edge.smooth = False
 
             bmesh.ops.remove_doubles(bm, verts=bm.verts, dist=remove_doubles_distance)
-            mod = obj.modifiers.new("EdgeSplit", 'EDGE_SPLIT')
+            mod = obj.modifiers.new('EdgeSplit', 'EDGE_SPLIT')
             mod.use_edge_angle = False
             bm.to_mesh(mesh)
             bm.free()

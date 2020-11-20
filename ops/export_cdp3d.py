@@ -344,7 +344,7 @@ def save(operator,
             m.num_polys = len(m.polys)
 
             if len(m.vertices) == 0 or len(m.polys) == 0:
-                message = 'Can\'t export empty mesh "{}". {} vertices, {} polys. Ignoring'.format(m.name, len(m.vertices), len(m.polys))
+                message = 'Can\'t export empty mesh: {}. {} vertices, {} polys. Ignoring'.format(m.name, len(m.vertices), len(m.polys))
                 print(message)
                 if log_file:
                     log_file.write(message)

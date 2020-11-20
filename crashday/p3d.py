@@ -1,5 +1,8 @@
 import struct
 
+# TODO:
+# - add error checking for struct reading\writing
+
 def rf(file, format):
     answer = struct.unpack(format, file.read(struct.calcsize(format)))
     return answer[0] if len(answer) == 1 else answer
@@ -11,13 +14,13 @@ def rf_str(file):
         if char == b'\x00':
             break
         string += char
-    return str(string, "utf-8", "replace")
+    return str(string, 'utf-8', 'replace')
 
 def wf(file, format, *args):
     file.write(struct.pack(format, *args))
 
 def wf_str(file, st):
-    wf(file, '<%ds' % (len(st)+1), st.encode("ASCII", "replace"))
+    wf(file, '<%ds' % (len(st)+1), st.encode('ASCII', 'replace'))
 
 class TextureInfo:
     def __init__(self):
@@ -229,10 +232,16 @@ pos: {}\nsize: {:.2f} {:.2f} {:.2f} \n'''.format(
         for ti in self.texture_infos:
             ti.write(file)
 
+        if self.num_vertices != len(self.vertices):
+            print('Counted num_vertices differs from actual amount of vertices! Report this error!')
+            self.num_vertices = len(self.vertices)
         w('<H', self.num_vertices)
         for v in self.vertices:
             w('<3f', v[0], v[2], v[1])
 
+        if self.num_polys != len(self.polys):
+            print('Counted num_polys differs from actual amount of polys! Report this error!')
+            self.num_polys = (self.polys)
         w('<H', self.num_polys)
         for p in self.polys:
             p.write(file)
@@ -335,14 +344,20 @@ class P3D:
         file.write(b'TEX')
         w('<I', 1337)
         w('<B', self.num_textures)
-        for i in range(self.num_textures):
-            tn = self.textures[i] + '.tga'
+        if self.num_textures != len(self.textures):
+            print('Counted num_textures differs from actual amount of textures! Report this error!')
+            self.num_textures = len(self.textures)
+        for tex in self.textures:
+            tn = tex + '.tga'
             w_str(tn.lower())
 
         # lights list
         file.write(b'LIGHTS')
         w('<I', 1337)
         w('<H', self.num_lights)
+        if self.num_lights != len(self.lights):
+            print('Counted num_lights differs from actual amount of lights! Report this error!')
+            self.num_lights = len(self.lights)
         for light in self.lights:
             light.write(file)
 
@@ -350,6 +365,9 @@ class P3D:
         file.write(b'MESHES')
         w('<I', 1337)
         w('<H', self.num_meshes)
+        if self.num_meshes != len(self.meshes):
+            print('Counted num_meshes differs from actual amount of meshes! Report this error!')
+            self.num_meshes = len(self.meshes)
         for m in self.meshes:
             m.write(file)
 

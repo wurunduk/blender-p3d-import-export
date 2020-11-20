@@ -28,6 +28,7 @@ CD .p3d files do not store any information about normals which means we can not 
 
 ## TODO:
 - dimensions in .p3d mesh are read in the wrong order
+- add flags export
 - print error when no uv unrap was present, or create a default one
 - when importing sort car parts into collections
 - save export import settings if possible
