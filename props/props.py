@@ -27,19 +27,19 @@ class CDP3DLightProps(bpy.types.PropertyGroup):
     corona          : bpy.props.BoolProperty(
         name        = 'Enable Corona(dont press in 2020)',
         default     = True,
-        description = "Enable corona effect for this light"
+        description = 'Enable corona effect for this light'
     )
 
     lens_flares     : bpy.props.BoolProperty(
         name        = 'Enable Lens Flares',
         default     = True,
-        description = "Enable lens flares for this light"
+        description = 'Enable lens flares for this light'
     )
 
     lightup_environment : bpy.props.BoolProperty(
         name        = 'Enable Environment Lighting',
         default     = True,
-        description = "Should this lamp lightup environment (only works for tiles)"
+        description = 'Should this lamp lightup environment (only works for tiles)'
     )
 
     def register():
