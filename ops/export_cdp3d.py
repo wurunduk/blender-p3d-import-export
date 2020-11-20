@@ -246,7 +246,8 @@ def save(operator,
             if mesh.cdp3d.collisions:
                 m.flags = 2
             else:
-                m.flags = 0
+                # m.flags = (8388608 | 2)
+                m.flags = 2
 
             # save the flags
             if ob == main:
