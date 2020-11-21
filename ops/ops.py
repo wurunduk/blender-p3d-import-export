@@ -14,6 +14,7 @@ from bpy_extras.io_utils import (
 from . import export_cdp3d
 from . import import_cdp3d
 
+
 if 'bpy' in locals():
     import importlib
     importlib.reload(import_cdp3d)

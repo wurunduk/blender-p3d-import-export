@@ -2,7 +2,7 @@ import bpy
 
 class MATERIAL_PT_p3d_material(bpy.types.Panel):
     bl_idname      = 'MATERIAL_PT_p3d_material'
-    bl_label       = 'CDRE - Material'
+    bl_label       = 'Crashday - Material'
     bl_space_type  = 'PROPERTIES'
     bl_region_type = 'WINDOW'
     bl_context     = 'material'
@@ -19,7 +19,7 @@ class MATERIAL_PT_p3d_material(bpy.types.Panel):
 
 class DATA_PT_p3d_light(bpy.types.Panel):
     bl_idname      = 'DATA_PT_p3d_light'
-    bl_label       = 'CDRE - Light'
+    bl_label       = 'Crashday - Light'
     bl_space_type  = 'PROPERTIES'
     bl_region_type = 'WINDOW'
     bl_context     = 'data'
@@ -40,7 +40,7 @@ class DATA_PT_p3d_light(bpy.types.Panel):
 
 class DATA_PT_p3d_mesh(bpy.types.Panel):
     bl_idname      = 'DATA_PT_p3d_mesh'
-    bl_label       = 'CDRE - Mesh'
+    bl_label       = 'Crashday - Mesh'
     bl_space_type  = 'PROPERTIES'
     bl_region_type = 'WINDOW'
     bl_context     = 'data'
