@@ -42,7 +42,16 @@ def get_textures_used(ob):
         ob.data.materials.append(col_white)
 
     for mat in ob.data.materials:
-        tn = mat.cdp3d.material_name
+        tn = ''
+        if mat.cdp3d.use_texture:
+            img = mat.node_tree.nodes.get('Image Texture') # get texture used in the material
+            if img and img.image: # if exists and has linked texture
+                tn = img.image.name.rsplit( ".", 1 )[ 0 ] # remove extension if present
+            else:
+                tn = mat.cdp3d.material_name # otherwise use material preset in cdp3d material properties
+        else:
+            tn = mat.cdp3d.material_name
+
         if tn not in textures:
             textures.append(tn)
 
