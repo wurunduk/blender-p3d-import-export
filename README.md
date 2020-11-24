@@ -20,11 +20,15 @@ Though, makep3d sets coronas to off and environment light up to on for every lig
 ## Moddeling guidelines
 CD .p3d format does not support a lot of options available in blender and also uses some old techniques to achieve certain things. Because of that users need to model and structure the scene in a certain way to achieve a good look.  
 Y+ axis in blender is forward direction for cars.
+Z+ axis is height in cd world.
 ### Materials
 For materials a new panel was added named "Crashday - Material". This panel has material type and texture name used by Crashday.
 There is no need to add an extension to the texture name, but remember CD uses .dds or .tga.
 ### Creating hard edges
 CD .p3d files do not store any information about normals which means we can not change how smoothing works(only by using pre-set material types). While Flat materials will show triangles and all the edges will look hard, Gouraud materials will smooth everything. Sometimes it is needed to create a hard edge on smooth surface. The CD way to do this is to split the edge.
+### Mesh flags
+Since this is highly undocumented, you really shouldn't mess with those. The exporter will auto set every flag as Crashday usually expects.  
+Every mesh has a flags field saved into .p3d. This fields stores some general information about the mesh. Usually, only 'Main', 'Visible', 'Tracing' and 'Collision' are set by the exporter. Other ones i used by the game and set on model load. For example 'Detachable' flag might be set when a mesh with 'det_' is found. In short, these flags are not supposed to be edited not by the game, but who will stop us from trying ;). Some flags should have no effect, but others might. 
 
 ## TODO:
 - dimensions in .p3d mesh are read in the wrong order

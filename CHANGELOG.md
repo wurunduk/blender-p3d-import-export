@@ -8,11 +8,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 ### Changed
 ### Fixed
 
-## [1.6.0]
+## [1.6.0] 2020-11-24
 ### Added
 - Added option to use texture name to use as material name, enabled by default. Needs testing, and suggestions
 - Added bounding box option on export. 'Main' mode deals makep3d results, 'All' mode should make the whole model collidable
 - Added option to force select a main mesh on export
+- Added 'Crashday - Mesh' panel. Currently contains flags, which are saved into .p3d. Check readme for more info on flags.
 ### Changed
 - Changed plugin mesh limits from 32k to 65k. If models start to crash CD, pls report!
 - Renamed 'CDRE' to 'Crashday' in panels for nicer look
