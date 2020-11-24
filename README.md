@@ -14,14 +14,14 @@ When importing you can also add up to four texture path's. If provided, the addo
 **Object rotation is not applied on export.**  
 You can enable export-log which is created in the same folder as the exported file and contains export log as well as meshes list, used in .cca files. This info is also logged in Blender's console.
 ##### Lights
-In Lights tab a panel named "CDRE - Light" was added, which lets you edit Crashday's light settings.  
+In Lights tab a panel named "Crashday - Light" was added, which lets you edit Crashday's light settings.  
 Though, makep3d sets coronas to off and environment light up to on for every light, which may mean those values are obsolete.  
 
 ## Moddeling guidelines
 CD .p3d format does not support a lot of options available in blender and also uses some old techniques to achieve certain things. Because of that users need to model and structure the scene in a certain way to achieve a good look.  
 Y+ axis in blender is forward direction for cars.
 ### Materials
-For materials a new panel was added named "CDRE - Material". This panel has material type and texture name used by Crashday.
+For materials a new panel was added named "Crashday - Material". This panel has material type and texture name used by Crashday.
 There is no need to add an extension to the texture name, but remember CD uses .dds or .tga.
 ### Creating hard edges
 CD .p3d files do not store any information about normals which means we can not change how smoothing works(only by using pre-set material types). While Flat materials will show triangles and all the edges will look hard, Gouraud materials will smooth everything. Sometimes it is needed to create a hard edge on smooth surface. The CD way to do this is to split the edge.

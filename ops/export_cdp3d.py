@@ -53,8 +53,9 @@ def save(operator,
          use_selection=True,
          use_mesh_modifiers=True,
          use_empty_for_floor_level=True,
-         export_log=True,
-         force_main_mesh=True):
+         bbox_mode='MAIN',
+         force_main_mesh=True,
+         export_log=True):
 
     # get the folder where file will be saved and add a log in that folder
     work_path = '\\'.join(filepath.split('\\')[0:-1])
@@ -113,6 +114,7 @@ def save(operator,
             if ob.name == 'main':
                 main = ob
                 main_like = ob
+                any = ob
             if ob.name == 'mainshad':
                 shad = ob
             if ob.name == 'maincoll':
@@ -132,7 +134,7 @@ def save(operator,
             return {'CANCELLED'}
         else:
             if main_like is not None:
-                print('Found main mesh: {}. Using as main'.format(main_like.name))
+                print('Found main like mesh: {}. Using as main'.format(main_like.name))
                 main = main_like
             elif any is not None:
                 print('Found some mesh: {}. Using as main'.format(any.name))
@@ -217,6 +219,11 @@ def save(operator,
             m.height = highz - lowz
             m.depth = highy - lowy
 
+            if bbox_mode == 'ALL':
+                p.height = max(p.height, m.height)
+                p.length = max(p.length, max(highx, -lowx) * 2)
+                p.depth = max(p.depth, max(highy, -lowy) * 2)
+
             # save model bounds
             if ob == main:
                 floor_level = bpy.data.objects.get('floor_level')
@@ -229,19 +236,21 @@ def save(operator,
 
                 # this is size calculation which is done in original p3d
                 # but this breaks collision for non-symmetrical tiles 
-                #p.length = m.length
+                if bbox_mode == 'MAIN':
+                    p.length = m.length
+                    p.height = m.height
+                    p.depth = m.depth
+
+                    # while this looks dumb, this is how original makep3d works
+                    if p.length >= 19.95 and p.length <= 20.05: p.length = 20
+                    if p.length >= 39.95 and p.length <= 40.05: p.length = 40
+                    if p.depth >= 19.95 and p.depth <= 20.05: p.depth = 20
+                    if p.depth >= 39.95 and p.depth <= 40.05: p.depth = 40
+
+                # this would fix non-symmetrical tile bounding-box
                 #p.height = m.height
-                #p.depth = m.depth
-
-                p.height = m.height
-                p.length = max(highx, -lowx) * 2
-                p.depth = max(highy, -lowy) * 2
-
-                # while this looks dumb, this is how original makep3d works
-                if p.length >= 19.95 and p.length <= 20.05: p.length = 20
-                if p.length >= 39.95 and p.length <= 40.05: p.length = 40
-                if p.depth >= 19.95 and p.depth <= 20.05: p.depth = 20
-                if p.depth >= 39.95 and p.depth <= 40.05: p.depth = 40
+                #p.length = max(highx, -lowx) * 2
+                #p.depth = max(highy, -lowy) * 2
 
             if mesh.cdp3d.collisions:
                 m.flags = 2
@@ -275,6 +284,7 @@ def save(operator,
                     pol = p3d.Polygon()
 
                     # texture info
+                    # TODO: if a polygon is assigned to a material which was deleted this will error
                     pol.texture = ob.data.materials[tri.material_index].cdp3d.material_name
                     pol.material = ob.data.materials[tri.material_index].cdp3d.material_type
                     

@@ -125,6 +125,22 @@ class EXPORT_OT_cdp3d(bpy.types.Operator, ExportHelper):
         default     = True
     )
 
+    bbox_mode       : EnumProperty(
+        name        = 'Bounding box mode',
+        description = 'Bounding box defines area in which collisions will be detected. Meshes outside this box will have no collisions.',
+        items       = (
+            ('MAIN',    'Main mesh',    'Calculate bounding box using main mesh sizes. This is default makep3d behaviour.'),
+            ('ALL',     'All meshes',   'Calculate bounding box using all meshes. Everything will be collidable.')
+        ),
+        default     = 'MAIN'
+    )
+
+    force_main_mesh : BoolProperty(
+        name        = 'Force main mesh',
+        description = 'If no main mesh was found, try finding a substite mesh and use it as main.',
+        default     = False
+    )
+
     export_log: BoolProperty(
         name        = 'Export Log',
         description = 'Create a log file of export process with useful data',

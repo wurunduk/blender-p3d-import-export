@@ -1,10 +1,16 @@
 import bpy
 
 class CDP3DMaterialProps(bpy.types.PropertyGroup):
+    use_texture     : bpy.props.BoolProperty (
+        name        = 'Try using texture name',
+        description = 'If a texture is found, use texture name for material name',
+        default     = True
+    )
+
     material_name   : bpy.props.StringProperty (
         name        = 'Texture Name',
-        default     = 'colwhite',
-        description = 'Name of the .tga or .dds texture to be used'
+        description = 'Name of the .tga or .dds texture to be used',
+        default     = 'colwhite'
     )
 
     material_type   : bpy.props.EnumProperty(
@@ -25,21 +31,21 @@ class CDP3DMaterialProps(bpy.types.PropertyGroup):
 
 class CDP3DLightProps(bpy.types.PropertyGroup):
     corona          : bpy.props.BoolProperty(
-        name        = 'Enable Corona(dont press in 2020)',
-        default     = True,
-        description = 'Enable corona effect for this light'
+        name        = 'Enable Corona (dont press in 2020)',
+        description = 'Enable corona effect for this light',
+        default     = True
     )
 
     lens_flares     : bpy.props.BoolProperty(
         name        = 'Enable Lens Flares',
-        default     = True,
-        description = 'Enable lens flares for this light'
+        description = 'Enable lens flares for this light',
+        default     = True
     )
 
     lightup_environment : bpy.props.BoolProperty(
         name        = 'Enable Environment Lighting',
-        default     = True,
-        description = 'Should this lamp lightup environment (only works for tiles)'
+        description = 'Should this lamp lightup environment (only works for tiles)',
+        default     = True
     )
 
     def register():
@@ -48,8 +54,8 @@ class CDP3DLightProps(bpy.types.PropertyGroup):
 class CDP3DMeshProps(bpy.types.PropertyGroup):
     collisions      : bpy.props.BoolProperty(
         name        = 'Enable Collisions',
-        default     = True,
-        description = 'Enable collisions on this mesh. Only parts which are inside tile bbox will be collidable.'
+        description = 'Enable collisions on this mesh. Only parts which are inside tile bbox will be collidable.',
+        default     = True
     )
 
     def register():
