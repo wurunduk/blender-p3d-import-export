@@ -44,11 +44,15 @@ def get_textures_used(ob):
     for mat in ob.data.materials:
         tn = ''
         if mat.cdp3d.use_texture:
-            img = mat.node_tree.nodes.get('Image Texture') # get texture used in the material
-            if img and img.image: # if exists and has linked texture
-                tn = img.image.name.rsplit( ".", 1 )[ 0 ] # remove extension if present
+            if mat.node_tree:
+                img = mat.node_tree.nodes.get('Image Texture') # get texture used in the material
+                if img and img.image: # if exists and has linked texture
+                    tn = img.image.name.rsplit( ".", 1 )[ 0 ] # remove extension if present
+                    mat.cdp3d.material_name = tn
+                else:
+                    tn = mat.cdp3d.material_name # otherwise use material preset in cdp3d material properties
             else:
-                tn = mat.cdp3d.material_name # otherwise use material preset in cdp3d material properties
+                tn = mat.cdp3d.material_name
         else:
             tn = mat.cdp3d.material_name
 
@@ -285,6 +289,8 @@ def save(operator,
             # save polys in blender order and texture infos
             m.texture_infos = [p3d.TextureInfo() for i in range(p.num_textures)]
             polys = []
+            if len(mesh.uv_layers) == 0:
+                mesh.uv_layers.new()
             for uv_layer in mesh.uv_layers:
                 for tri in mesh.loop_triangles:
                     if len(tri.loops) != 3:

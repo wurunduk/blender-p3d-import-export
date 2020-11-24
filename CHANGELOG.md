@@ -8,7 +8,10 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 ### Changed
 ### Fixed
 
-## [1.6.1]
+## [1.6.1] 2020-11-24
+### Fixed 
+- Fixed export when reading material name from texture name.
+- Fixed export when model has no uv_layers
 
 ## [1.6.0] 2020-11-24
 ### Added
