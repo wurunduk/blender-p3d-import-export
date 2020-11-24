@@ -8,6 +8,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 ### Changed
 ### Fixed
 
+## [1.6.1]
+
 ## [1.6.0] 2020-11-24
 ### Added
 - Added option to use texture name to use as material name, enabled by default. Needs testing, and suggestions

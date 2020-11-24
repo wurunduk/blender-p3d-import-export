@@ -114,7 +114,7 @@ class CDP3DMeshProps(bpy.types.PropertyGroup):
             ('BRE', 'Breakable explosive',
             '',
             1 << 18),
-            ('LIPL', 'License place',
+            ('LIPL', 'License plate',
             '',
             1 << 19),
             ('HDL', 'Headlights',
