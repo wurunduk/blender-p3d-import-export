@@ -63,7 +63,7 @@ def save(operator,
          use_mesh_modifiers=True,
          use_empty_for_floor_level=True,
          bbox_mode='MAIN',
-         force_main_mesh=True,
+         force_main_mesh=False,
          export_log=True):
 
     # get the folder where file will be saved and add a log in that folder
@@ -261,11 +261,10 @@ def save(operator,
                 #p.length = max(highx, -lowx) * 2
                 #p.depth = max(highy, -lowy) * 2
 
-            if mesh.cdp3d.collisions:
-                m.flags = 2
-            else:
-                # m.flags = (8388608 | 2)
-                m.flags = 2
+            items = mesh.cdp3d.bl_rna.properties['flags'].enum_items
+
+            for flag in mesh.cdp3d.flags:
+                m.flags |= items[flag].value
 
             # save the flags
             if ob == main:

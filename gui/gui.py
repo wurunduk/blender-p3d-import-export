@@ -82,4 +82,8 @@ class DATA_PT_p3d_mesh(bpy.types.Panel):
         layout = self.layout
         settings = context.mesh.cdp3d
 
-        layout.prop(settings, 'collisions')
+        layout.label(text='These flags are saved in .p3d file')
+        layout.label(text='Only the last four are set manually, other ones are set by the game.')
+        layout.label(text='They are not designed for editing in p3d, but you may still try.')
+        layout.label(text='Main, Tracing and Collision are auto assigned on export')
+        layout.prop_menu_enum(settings, 'flags')

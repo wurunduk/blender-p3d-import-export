@@ -3,40 +3,6 @@ import struct
 # TODO:
 # - add error checking for struct reading\writing
 
-# possible p3d flags
-#/// Defaultflags, in P3D gesichert
-#define  MESHFLAG_MAIN                  1         /// Das Mesh ist das Haupt-Mesh (muss immer erstes Obj in P3D sein)
-#define  MESHFLAG_VISIBLE               2         /// Ist das Objekt jemals sichtbar
-#define  MESHFLAG_TRACINGSHAPE          4         /// Objekt ist Tracing-Silhouette (z.B für Schatten)
-#define  MESHFLAG_COLLISIONSHAPE        8         /// Objekt ist Kollisionsobjekt
-
-#/// Zusatzflags, beim Laden bestimmt
-#define  MESHFLAG_ISLODDEFAULT           16       /// Der LOD-Level der Standardmäßig wie ohne LOD vorliegt
-#define  MESHFLAG_LODDEFAULTANDVISIBLE   18       /// (2 + 16) - ein Defaultmesh ist sichtbar
-#define  MESHFLAG_ISSUBLODMESH          480       /// (32 + 64 + 128 + 256) - Haben wir eine LOD-Unterstufe
-#define  MESHFLAG_ISLOD0                 32       /// Ist dies ein besserer LOD
-#define  MESHFLAG_ISLOD2                 64       /// Ist dies der erstschlechter LOD
-#define  MESHFLAG_ISLOD3                128       /// Ist dies der zweitschlechtere LOD
-#define  MESHFLAG_ISLOD4                256       /// Ist dies der schlechteste LOD
-#define  MESHFLAG_HASANYSUBLODS        7680       /// (512 + 1024 + 2048 + 4096) - hat ein Mesh irgendwelche Sublods
-#define  MESHFLAG_HASSUBLOD0            512       /// Hat das Mesh ein Untermesh LOD-Level 0
-#define  MESHFLAG_HASSUBLOD2           1024       /// Hat das Mesh ein Untermesh LOD-Level 2
-#define  MESHFLAG_HASSUBLOD3           2048       /// Hat das Mesh ein Untermesh LOD-Level 3
-#define  MESHFLAG_HASSUBLOD4           4096       /// Hat das Mesh ein Untermesh LOD-Level 4
-
-#define  MESHFLAG_DETACHABLE_PART      8192       /// Objekt ist abfallendes Teil bei einem Auto
-#define  MESHFLAG_BREAKABLE_GLASS     16384       /// Objekt ist zerbrechliches Glass
-#define  MESHFLAG_BREAKABLE_PLASTIC   32768       /// Objekt ist zerbrechliche Plastik
-#define  MESHFLAG_BREAKABLE_WOOD      65536       /// Objekt ist zerbrechliches Holzteil
-#define  MESHFLAG_BREAKABLE_METAL    131072       /// Objekt ist zerbrechliches Metallteil
-#define  MESHFLAG_BREAKABLE_EXPLO    262144       /// Objekt ist zerbrechliches, explosives Teil
-#define  MESHFLAG_ISBREAKABLE        507904       /// Objekt ist eines der möglichen Breakable-Typen (Glass, Plastik etc.)
-#define  MESHFLAG_NUMBERPLATE        524288       /// Objekt ist ein Nummernschild
-#define  MESHFLAG_HEADLIGHT         1048576       /// Objekt ist ein Scheinwerfer
-#define  MESHFLAG_BRAKELIGHT        2097152       /// Objekt ist ein Bremslicht
-#define  MESHFLAG_DAMAGED	        4194304       /// Object is displayed as a damaged mesh when another mesh is being damaged
-#define  MESHFLAG_NOCOLLISION       8388608       /// Object has no collision
-
 def rf(file, format):
     answer = struct.unpack(format, file.read(struct.calcsize(format)))
     return answer[0] if len(answer) == 1 else answer

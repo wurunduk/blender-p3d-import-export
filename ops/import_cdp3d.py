@@ -98,7 +98,15 @@ def create_meshes(p3d_model, col, use_edge_split_modifier, remove_doubles_distan
         # if 'coll' in m.name or 'shad' in m.name or 'lod' in m.name or '.' in m.name:
         #     obj.hide_set(True)
 
-        mesh.cdp3d.collisions = True # not bool(m.flags & 8388608)
+        items = mesh.cdp3d.bl_rna.properties['flags'].enum_items
+        
+        flags = set()
+        for flag in items:
+            # print(flag.value)
+            if m.flags & flag.value:
+                flags.add(flag.identifier)
+
+        mesh.cdp3d.flags = flags
 
         for t in m.materials_used:
             add_material(obj, t)
@@ -200,6 +208,8 @@ def load(operator,
     create_meshes(p, col, use_edge_split_modifier, remove_doubles_distance)
 
     create_pos(col, (0.0, 0.0, - p.height/2.0), 'floor_level')
+
+    print('Done importing .p3d file')
 
     return {'FINISHED'}
 
