@@ -8,6 +8,10 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 ### Changed
 ### Fixed
 
+## [1.6.3]
+### Added
+- Added auto applying of object transformations on export
+
 ## [1.6.2]
 ### Fixed
 - Fixed floor_level not being used when export bounding box mode is set to 'ALL'

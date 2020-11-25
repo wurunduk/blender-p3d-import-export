@@ -31,13 +31,12 @@ Since this is highly undocumented, you really shouldn't mess with those. The exp
 Every mesh has a flags field saved into .p3d. This fields stores some general information about the mesh. Usually, only 'Main', 'Visible', 'Tracing' and 'Collision' are set by the exporter. Other ones i used by the game and set on model load. For example 'Detachable' flag might be set when a mesh with 'det_' is found. In short, these flags are not supposed to be edited not by the game, but who will stop us from trying ;). Some flags should have no effect, but others might. 
 
 ## TODO:
-- dimensions in .p3d mesh are read in the wrong order
-- add flags export
 - print error when no uv unrap was present, or create a default one
 - when importing sort car parts into collections
 - save export import settings if possible
-- apply obect mode rotation
-- correctly center meshes?
+- ~~apply obect mode rotation~~
+- ~~correctly center meshes~~
+- ~~add flags export~~
 - ~~maybe load .cca and add positions~~
 - ~~automaticaly set floor~~
 - ~~check if no material is on object~~
