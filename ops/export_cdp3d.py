@@ -47,7 +47,7 @@ def get_textures_used(ob):
             if mat.node_tree:
                 img = mat.node_tree.nodes.get('Image Texture') # get texture used in the material
                 if img and img.image: # if exists and has linked texture
-                    tn = img.image.name.rsplit( ".", 1 )[ 0 ] # remove extension if present
+                    tn = img.image.name.rsplit( ".", 1 )[0] # remove extension if present
                     mat.cdp3d.material_name = tn
                 else:
                     tn = mat.cdp3d.material_name # otherwise use material preset in cdp3d material properties
@@ -172,6 +172,8 @@ def save(operator,
     # this means we need to move all other models alongside main mesh
     main_center = main.location
     
+    floor_level = bpy.data.objects.get('floor_level')
+
     # iterate through all objects in the scene and save into p3d model
     p.meshes = []
     p.lights = []
@@ -232,15 +234,19 @@ def save(operator,
             m.height = highz - lowz
             m.depth = highy - lowy
 
+
+
             if bbox_mode == 'ALL':
-                p.height = max(p.height, m.height)
+                if floor_level is not None and use_empty_for_floor_level:
+                    fl_pos = floor_level.location
+                    height = -(fl_pos - ob.location)[2]*2
+
+                p.height = max(p.height, height)
                 p.length = max(p.length, max(highx, -lowx) * 2)
                 p.depth = max(p.depth, max(highy, -lowy) * 2)
 
             # save model bounds
             if ob == main:
-                floor_level = bpy.data.objects.get('floor_level')
-
                 m.name = sanitise_mesh_name('main')
 
                 if floor_level is not None and use_empty_for_floor_level:
