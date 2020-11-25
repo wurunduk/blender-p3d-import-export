@@ -9,7 +9,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 ### Fixed
 
 ## [1.6.2]
-## Fixed
+### Fixed
 - Fixed floor_level not being used when export bounding box mode is set to 'ALL'
 
 ## [1.6.1] 2020-11-24
