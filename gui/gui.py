@@ -13,11 +13,12 @@ class MATERIAL_PT_p3d_material(bpy.types.Panel):
             return
 
         def get_texture_name():
-            img = context.material.node_tree.nodes.get('Image Texture')
-            if img and img.image:
-                return img.image.name
-            else:
-                return None
+            if context.material and context.material.node_tree:
+                img = context.material.node_tree.nodes.get('Image Texture')
+                if img and img.image:
+                    return img.image.name
+                
+            return None
 
         layout = self.layout
         col = layout.column()

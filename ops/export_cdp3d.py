@@ -168,9 +168,31 @@ def save(operator,
         if log_file:
             log_file.write('! Collision mesh was not found, using main mesh for collisions.\n')
 
+    def get_bounds(ob, mesh, current_low = [0.0,0.0,0.0], current_max = [0.0,0.0,0.0]):
+        low = current_low
+        high = current_max
+
+        if len(mesh.vertices) > 0:
+            low = ob.matrix_world @ mesh.vertices[0].co
+            high = ob.matrix_world @ mesh.vertices[0].co
+
+        for v in mesh.vertices:
+            pos = ob.matrix_world @ v.co
+            for i in range(3):
+                if low[i] > pos[i]:
+                    low[i] = pos[i]
+                if high[i] < pos[i]:
+                    high[i] = pos[i]
+
+        return (low, high)
+
+
     # the main mesh in p3d is always at 0.0.
     # this means we need to move all other models alongside main mesh
-    main_center = main.matrix_world.to_translation()
+    main_mesh = main.to_mesh()
+    all_bounds = get_bounds(main, main_mesh)
+    main_bounds = get_bounds(main, main_mesh)
+    main_center = (main_bounds[1] + main_bounds[0])/2.0
     
     floor_level = bpy.data.objects.get('floor_level')
 
@@ -183,7 +205,7 @@ def save(operator,
 
             light = p3d.Light()
             light.name = sanitise_mesh_name(ob.name)
-            light.pos = ob.location - main_center
+            light.pos = ob.location - main_center + ob.matrix_world.to_translation()
             light.range = ob.data.energy
             light.color = color_to_int(ob.data.color)
 
@@ -197,58 +219,48 @@ def save(operator,
             m = p3d.Mesh()
 
             m.name = sanitise_mesh_name(ob.name)
-            m.pos = (ob.matrix_world.to_translation()) - main_center
 
             mesh = ob.to_mesh()
 
-            lowx = 0.0
-            highx = 0.0
-            lowy = 0.0
-            highy = 0.0
-            lowz = 0.0
-            highz = 0.0
+            mb = get_bounds(ob, mesh)
 
-            if len(mesh.vertices) > 0:
-                vert_pos = (ob.matrix_world @ mesh.vertices[0].co) - ob.matrix_world.to_translation()
-                lowx = highx = vert_pos[0]
-                lowy = highy = vert_pos[1]
-                lowz = highz = vert_pos[2]
+            # TODO: this naming makes me cry, do something please
+            # mb[0] for lowest position, mb[1] for highest position, then coordiantes
+            m.length = mb[1][0] - mb[0][0]
+            m.height = mb[1][2] - mb[0][2]
+            m.depth = mb[1][1] - mb[0][1]
+
+            m.pos = (mb[1] + mb[0])/2.0 - main_center
+
+            if bbox_mode == 'ALL':
+                all_bounds = get_bounds(ob, mesh, all_bounds[0], all_bounds[1])
+                p.length = max(p.length, all_bounds[1][0] - all_bounds[0][0])
+                #p.height = max(p.height, all_bounds[1][2] - all_bounds[0][2])
+                p.depth = max(p.depth, all_bounds[1][1] - all_bounds[0][1])
 
             # save vertices and calculate mesh bounds
             m.vertices = []
             for v in mesh.vertices:
-                pos = (ob.matrix_world @ v.co) - ob.matrix_world.to_translation()
-                if lowx > pos[0]: lowx = pos[0]
-                if highx < pos[0]: highx = pos[0]
-                if lowy > pos[1]: lowy = pos[1]
-                if highy < pos[1]: highy = pos[1]
-                if lowz > pos[2]: lowz = pos[2]
-                if highz < pos[2]: highz = pos[2]
-                m.vertices.append((ob.matrix_world @ v.co) - ob.matrix_world.to_translation())
+                m.vertices.append((ob.matrix_world @ v.co) - (mb[1] + mb[0])/2.0)
 
             m.num_vertices = len(m.vertices)
 
-            m.length = highx - lowx
-            m.height = highz - lowz
-            m.depth = highy - lowy
-
-            if bbox_mode == 'ALL':
-                print(highy, lowy, ob.location, ob.matrix_world.to_translation(), main_center)
-                p.length = max(p.length, max(highx, -lowx) * 2)
-                p.depth = max(p.depth, max(highy, -lowy) * 2)
-
-            # save model bounds
             if ob == main:
                 m.name = sanitise_mesh_name('main')
 
-                if floor_level is not None and use_empty_for_floor_level:
-                    fl_pos = floor_level.location
-                    p.height = ((ob.matrix_world.to_translation()) - fl_pos)[2]*2
+                m.pos = (0.0, 0.0, 0.0)
 
-                # this is size calculation which is done in original p3d
-                # but this breaks collision for non-symmetrical tiles 
+                if use_empty_for_floor_level and floor_level is not None:
+                    if bbox_mode == 'MAIN':
+                        p.height = m.height - (floor_level.location - main_bounds[0])[2]*2
+                    else:
+                        p.height = m.height - (floor_level.location - main_bounds[0])[2]*2
+                else:
+                    p.height = m.height
+
                 if bbox_mode == 'MAIN':
                     p.length = m.length
+                    p.height = m.height
                     p.depth = m.depth
 
                     # while this looks dumb, this is how original makep3d works
@@ -256,6 +268,7 @@ def save(operator,
                     if p.length >= 39.95 and p.length <= 40.05: p.length = 40
                     if p.depth >= 19.95 and p.depth <= 20.05: p.depth = 20
                     if p.depth >= 39.95 and p.depth <= 40.05: p.depth = 40
+
 
                 # this would fix non-symmetrical tile bounding-box
                 #p.height = m.height
