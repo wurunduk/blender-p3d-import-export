@@ -257,9 +257,6 @@ def save(operator,
                 m.name = sanitise_mesh_name('main')
                 m.pos = (0.0, 0.0, 0.0)
 
-                for v in m.vertices:
-                    v += (mb[1] + mb[0])/2.0
-
                 m.height += ((mb[1] + mb[0]))[2]
 
                 if use_empty_for_floor_level:
