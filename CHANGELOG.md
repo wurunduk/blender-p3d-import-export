@@ -8,9 +8,11 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 ### Changed
 ### Fixed
 
-## [1.6.3]
+## [1.7.0]
 ### Added
 - Added auto applying of object transformations on export
+### Fixed
+- Fixed possible object bounds error which may have lead to collision bugs
 
 ## [1.6.2]
 ### Fixed
@@ -18,7 +20,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 
 ## [1.6.1] 2020-11-24
 ### Fixed 
-- Fixed export when reading material name from texture name.
+- Fixed export when reading material name from texture name
 - Fixed export when model has no uv_layers
 
 ## [1.6.0] 2020-11-24
@@ -26,7 +28,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 - Added option to use texture name to use as material name, enabled by default. Needs testing, and suggestions
 - Added bounding box option on export. 'Main' mode deals makep3d results, 'All' mode should make the whole model collidable
 - Added option to force select a main mesh on export
-- Added 'Crashday - Mesh' panel. Currently contains flags, which are saved into .p3d. Check readme for more info on flags.
+- Added 'Crashday - Mesh' panel. Currently contains flags, which are saved into .p3d. Check readme for more info on flags
 ### Changed
 - Changed plugin mesh limits from 32k to 65k. If models start to crash CD, pls report!
 - Renamed 'CDRE' to 'Crashday' in panels for nicer look
@@ -39,7 +41,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 
 ## [1.5.0] 2020-11-07
 ### Added
-- Added "CDRE - Light" panel in Light settings for setting up light export settings for each light. Includes color, range, corona, lens flares and environment lighting options.
+- Added "CDRE - Light" panel in Light settings for setting up light export settings for each light. Includes color, range, corona, lens flares and environment lighting options
 ### Changed
 - Material names are not exported and can be anything now
 - Added a "CDRE - Material" panel for each material, containing material type and texture name (no extensions needed)

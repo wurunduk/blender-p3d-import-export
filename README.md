@@ -11,7 +11,6 @@ Click "Install..." button at the top and select downloaded zip file
 You can import a model in File->Import->Crashday (.p3d)  
 When importing you can also add up to four texture path's. If provided, the addon will try to load textures from these folders.  
 ### Exporting
-**Object rotation is not applied on export.**  
 You can enable export-log which is created in the same folder as the exported file and contains export log as well as meshes list, used in .cca files. This info is also logged in Blender's console.
 ##### Lights
 In Lights tab a panel named "Crashday - Light" was added, which lets you edit Crashday's light settings.  
