@@ -186,7 +186,6 @@ def save(operator,
 
         return (low, high)
 
-
     # the main mesh in p3d is always at 0.0.
     # this means we need to move all other models alongside main mesh
     main_mesh = main.to_mesh()
@@ -195,6 +194,15 @@ def save(operator,
     main_center = (main_bounds[1] + main_bounds[0])/2.0
     
     floor_level = bpy.data.objects.get('floor_level')
+    if floor_level is None:
+        floor_level = bpy.data.objects.new('floor_level', None)
+        col.objects.link(floor_level)
+        floor_level.location = (0.0,0.0,0.0)
+        floor_level.empty_display_type = 'PLAIN_AXES'
+
+    if use_empty_for_floor_level:
+        delta = (floor_level.location - main_bounds[0])[2]
+        main_center[2] += delta/2
 
     # iterate through all objects in the scene and save into p3d model
     p.meshes = []
@@ -205,7 +213,7 @@ def save(operator,
 
             light = p3d.Light()
             light.name = sanitise_mesh_name(ob.name)
-            light.pos = ob.location - main_center + ob.matrix_world.to_translation()
+            light.pos = ob.matrix_world.to_translation() - main_center + main.matrix_world.to_translation()
             light.range = ob.data.energy
             light.color = color_to_int(ob.data.color)
 
@@ -238,7 +246,7 @@ def save(operator,
                 #p.height = max(p.height, all_bounds[1][2] - all_bounds[0][2])
                 p.depth = max(p.depth, all_bounds[1][1] - all_bounds[0][1])
 
-            # save vertices and calculate mesh bounds
+            # save vertices
             m.vertices = []
             for v in mesh.vertices:
                 m.vertices.append((ob.matrix_world @ v.co) - (mb[1] + mb[0])/2.0)
@@ -247,20 +255,21 @@ def save(operator,
 
             if ob == main:
                 m.name = sanitise_mesh_name('main')
-
                 m.pos = (0.0, 0.0, 0.0)
 
-                if use_empty_for_floor_level and floor_level is not None:
-                    if bbox_mode == 'MAIN':
-                        p.height = m.height - (floor_level.location - main_bounds[0])[2]*2
-                    else:
-                        p.height = m.height - (floor_level.location - main_bounds[0])[2]*2
+                for v in m.vertices:
+                    v += (mb[1] + mb[0])/2.0
+
+                m.height += ((mb[1] + mb[0]))[2]
+
+                if use_empty_for_floor_level:
+                    delta = (floor_level.location - main_bounds[0])[2]
+                    p.height = -floor_level.location[2]*2
                 else:
                     p.height = m.height
 
                 if bbox_mode == 'MAIN':
                     p.length = m.length
-                    p.height = m.height
                     p.depth = m.depth
 
                     # while this looks dumb, this is how original makep3d works

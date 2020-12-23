@@ -45,10 +45,10 @@ class TextureInfo:
         self.num_gouraud,
         self.num_gouraud_metal,
         self.num_gouraud_metal_env,
-        self.num_shining) = rf(file, '<7h')
+        self.num_shining) = rf(file, '<7H')
 
     def write(self, file):
-        wf(file, '<7h',
+        wf(file, '<7H',
             self.texture_start,
             self.num_flat,
             self.num_flat_metal,
