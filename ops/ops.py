@@ -56,24 +56,10 @@ class IMPORT_OT_cdp3d(bpy.types.Operator, ImportHelper):
         default     = 0.00001
     )
 
-    cd_path         : StringProperty(
-        name        = 'Path to general texture folder',
-        description = 'If provided plugin will auto load textures from this folder'
-    )
-
-    car_path        : StringProperty(
-        name        = 'Path to a car texture folder',
-        description = 'If provided plugin will auto load textures from this folder'
-    )
-
-    cd_path_mod     : StringProperty(
-        name        = 'Path to general texture folder of the mod',
-        description = 'If provided plugin will auto load textures from this folder'
-    )
-
-    car_path_mod    : StringProperty(
-        name        = 'Path to car texture folder of the mod',
-        description = 'If provided plugin will auto load textures from this folder'
+    search_textures : BoolProperty(
+        name        = 'Search textures',
+        description = 'Tries to find texture folders and load correct textures for the model',
+        default     = True
     )
 
     def execute(self, context):

@@ -11,6 +11,64 @@ if 'bpy' in locals():
 def int_to_color(value):
     return (((value >> 16) & 255)/255.0, ((value >> 8) & 255)/255.0, (value & 255)/255.0)
 
+def get_folders_array_from_path(filepath):
+    drive, path_and_file = os.path.splitdrive(filepath)
+    path, _ = os.path.split(path_and_file)
+    folders = []
+    while True:
+        path, folder = os.path.split(path)
+
+        if folder != "":
+            folders.append(folder)
+        elif path != "":
+            folders.append(path)
+            break
+
+    return drive, folders
+
+def find_texture_paths(filepath, search_path):
+    drive, folders = get_folders_array_from_path(filepath)
+    is_car = True if folders[1] == 'cars' else False
+    car_name = None
+    if is_car:
+        car_name = folders[0]
+        print('Car model is being loaded, guessed name {}'.format(car_name))
+    else:
+        print('Non car model is being loaded')
+
+    folders.reverse()
+
+    # load textures of the mod
+    try:
+        ind = folders.index('models')
+        textures_mod_path = os.path.join(drive, *folders[:ind], 'textures')
+        if is_car and car_name is not None:
+            textures_mod_car_path = os.path.join(textures_mod_path, 'cars', car_name)
+            if os.path.isdir(textures_mod_car_path):
+                search_path.append(textures_mod_car_path)
+                print('Added {} local car textures path {}'.format(car_name, textures_mod_car_path))
+
+        if os.path.isdir(textures_mod_path):
+            search_path.append(textures_mod_path)
+            print('Added local mod textures path {}'.format(textures_mod_path))
+        
+    except ValueError:
+        print('Couldn\'t load local mod textures, model was not in models folder')
+
+    # load unpacked original cd textures if present
+    if True:
+        ind = folders.index('Crashday')
+        textures_cd_path = os.path.join(drive, *folders[:ind+1], 'data\\content\\textures')
+        if is_car and car_name is not None:
+            textures_cd_car_path = os.path.join(textures_cd_path, 'cars', car_name)
+            if os.path.isdir(textures_cd_car_path):
+                search_path.append(textures_cd_car_path)
+                print('Added {} crashday car textures path {}'.format(car_name, textures_cd_car_path))
+
+        if os.path.isdir(textures_cd_path):
+            search_path.append(textures_cd_path)
+            print('Added general crashday textures path {}'.format(textures_cd_path))
+
 def texture_exists(full_path, file_name):
     #remove extension and add to path
     p = os.path.join(full_path, os.path.splitext(file_name)[0])
@@ -175,22 +233,15 @@ def load(operator,
          use_edge_split_modifier=True,
          remove_doubles_distance=0.00001,
          filepath='',
-         cd_path='', car_path='',
-         cd_path_mod='', car_path_mod=''):
+         search_textures=True):
 
     file_name = filepath.split('\\')[-1]
 
     print('\nImporting file {} from {}'.format(file_name, filepath))
 
     search_path = []
-    if os.path.exists(cd_path):
-        search_path.append(cd_path)
-    if os.path.exists(car_path):
-        search_path.append(car_path)
-    if os.path.exists(cd_path_mod):
-        search_path.append(cd_path_mod)
-    if os.path.exists(car_path_mod):
-        search_path.append(car_path_mod)
+    if search_textures:
+        find_texture_paths(filepath, search_path)
 
     p = p3d.P3D()
 

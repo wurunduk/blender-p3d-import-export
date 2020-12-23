@@ -11,6 +11,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 ## [1.7.0]
 ### Added
 - Added auto applying of object transformations on export
+- Added auto-scanning for textures in relevant folders
 ### Fixed
 - Fixed possible object bounds error which may have lead to collision bugs
 
