@@ -1,6 +1,8 @@
 # Blender p3d import-export
 Crashday p3d model import-export addon for blender 2.83  
 
+**IMPORTANT NOTE: This plugin is made for _Crahday_ .p3d format! It wont work for ARMA or other games!**
+
 ## Usage
 ### Installation
 To install, download latest version from github releases  
