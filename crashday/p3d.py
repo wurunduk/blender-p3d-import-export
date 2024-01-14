@@ -2,6 +2,7 @@ import struct
 
 # TODO:
 # - add error checking for struct reading\writing
+# - this is some terrible OOP like code which is terrible and only decreases redability. Burn this with fire and don't you dare copy it to somewhere else
 
 def rf(file, format):
     answer = struct.unpack(format, file.read(struct.calcsize(format)))
@@ -72,8 +73,8 @@ class Light:
     def __str__(self):
         formated_pos = ['{0:0.2f}'.format(i) for i in self.pos]
         return '''{}\nrange: {:.2f}, color: #{:x}\ncorona {}, flares {}, environment {}\npos: {}\n'''.format(
-            self.name[0] if type(self.name) is tuple else self.name, 
-            self.range, self.color, 
+            self.name[0] if type(self.name) is tuple else self.name,
+            self.range, self.color,
             self.show_corona, self.show_lens_flares, self.lightup_environment,
             formated_pos
         )
@@ -83,13 +84,13 @@ class Light:
 
         (self.pos[0], self.pos[2], self.pos[1],
         self.range, self.color,
-        self.show_corona, self.show_lens_flares, 
+        self.show_corona, self.show_lens_flares,
         self.lightup_environment) = rf(file, '<4fi3B')
 
     def write(self, file):
         wf_str(file, self.name.lower())
         wf(file, '<4fi3B', self.pos[0], self.pos[2], self.pos[1],
-        self.range, self.color, self.show_corona, 
+        self.range, self.color, self.show_corona,
         self.show_lens_flares, self.lightup_environment)
 
 class Polygon:
@@ -123,7 +124,7 @@ class Polygon:
         self.v3 = 1.0 - self.v3
 
     def write(self, file):
-        wf(file, '<H2fH2fH2f', 
+        wf(file, '<H2fH2fH2f',
         self.p1, self.u1, 1.0 - self.v1,
         self.p3, self.u3, 1.0 - self.v3,
         self.p2, self.u2, 1.0 - self.v2
@@ -154,9 +155,9 @@ class Mesh:
         formated_pos = ['{0:0.2f}'.format(i) for i in self.pos]
         return '''Mesh: {}\nflags: {}, vertices: {}, polys: {}
 pos: {}\nsize: {:.2f} {:.2f} {:.2f} \n'''.format(
-            self.name[0] if type(self.name) is tuple else self.name, 
+            self.name[0] if type(self.name) is tuple else self.name,
             self.flags, self.num_vertices, self.num_polys,
-            formated_pos, 
+            formated_pos,
             self.length, self.height, self.depth
         )
 
@@ -166,9 +167,9 @@ pos: {}\nsize: {:.2f} {:.2f} {:.2f} \n'''.format(
 
         self.name = rf_str(file)
 
-        (self.flags, 
+        (self.flags,
         self.pos[0], self.pos[2], self.pos[1],
-        self.length, self.height, 
+        self.length, self.height,
         self.depth) = rf(file, '<i6f')
 
         self.texture_infos = []
@@ -211,7 +212,7 @@ pos: {}\nsize: {:.2f} {:.2f} {:.2f} \n'''.format(
             polys_in_tex = add_material_type('GOURAUD', j.num_gouraud, polys_in_tex)
             polys_in_tex = add_material_type('GOURAUD_METAL', j.num_gouraud_metal, polys_in_tex)
             polys_in_tex = add_material_type('GOURAUD_METAL_ENV', j.num_gouraud_metal_env, polys_in_tex)
-            polys_in_tex = add_material_type('SHINING', j.num_shining, polys_in_tex) 
+            polys_in_tex = add_material_type('SHINING', j.num_shining, polys_in_tex)
 
     def write(self, file):
         def w(format, *args):
@@ -272,12 +273,12 @@ class P3D:
         print('\n{} lights:'.format(self.num_lights))
         for i in self.lights:
             print(i)
-        
+
         print('\n{} meshes:'.format(self.num_meshes))
         for i in self.meshes:
             print(i)
         return 'model size: {:.2f} {:.2f} {:.2f}\n{} lights, {} meshes, {} textures\n'.format(
-            self.length, self.height, self.depth, self.num_lights, 
+            self.length, self.height, self.depth, self.num_lights,
             self.num_meshes, self.num_textures)
 
     def read(self, file):
@@ -286,7 +287,7 @@ class P3D:
 
         def r_str():
             return rf_str(file)
-        
+
         # P3D2 signature
         file.read(4)
 
@@ -374,4 +375,3 @@ class P3D:
         file.write( b'USER')
         w('<I', 1337)
         w('<i', 0)
-            

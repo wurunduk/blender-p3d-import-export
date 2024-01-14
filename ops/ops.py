@@ -1,4 +1,4 @@
-import bpy 
+import bpy
 
 from bpy.props import (
         BoolProperty,
@@ -27,7 +27,7 @@ class IMPORT_OT_cdcca(bpy.types.Operator, ImportHelper):
     bl_options      = {'UNDO'}
 
     filename_ext    = '.cca'
-    filter_glob     : StringProperty(default='*.cca', 
+    filter_glob     : StringProperty(default='*.cca',
                                      options={'HIDDEN'})
 
     def execute(self, context):
@@ -43,7 +43,7 @@ class IMPORT_OT_cdp3d(bpy.types.Operator, ImportHelper):
     bl_options      = {'UNDO'}
 
     filename_ext    = '.p3d'
-    filter_glob     : StringProperty(default='*.p3d', 
+    filter_glob     : StringProperty(default='*.p3d',
                                      options={'HIDDEN'})
 
     use_edge_split_modifier : BoolProperty(

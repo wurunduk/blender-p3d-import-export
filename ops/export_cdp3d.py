@@ -19,19 +19,19 @@ def error_no_main(self, context):
 def sanitise_mesh_name(name):
     return name.replace(' ', '_')
 
+# TODO: has a side effect of conditional creation of a new material (if no other is present or some used material was deleted)
 def get_textures_used(ob):
     textures = []
 
-    m = None
+    needs_default_material = len(ob.data.materials) == 0 # if materials array is empty we will need to add a default material
 
-    # Check if there are any materials on the mesh
+    # Check if there are any deleted materials on the mesh
     for mat in ob.data.materials:
-        if mat is not None:
-            m = mat
+        if mat is None:
+            needs_default_material = True
             break
 
-    # if no material was found, add default colwhite.tga material to the object
-    if m is None:
+    if needs_default_material:
         col_white = bpy.data.materials.get('empty material')
         if col_white is None:
             col_white = bpy.data.materials.new('empty material')
@@ -42,6 +42,8 @@ def get_textures_used(ob):
         ob.data.materials.append(col_white)
 
     for mat in ob.data.materials:
+        if mat is None:
+            continue
         tn = ''
         if mat.cdp3d.use_texture:
             if mat.node_tree:
@@ -192,7 +194,7 @@ def save(operator,
     all_bounds = get_bounds(main, main_mesh)
     main_bounds = get_bounds(main, main_mesh)
     main_center = (main_bounds[1] + main_bounds[0])/2.0
-    
+
     floor_level = bpy.data.objects.get('floor_level')
     if floor_level is None:
         floor_level = bpy.data.objects.new('floor_level', None)
@@ -314,10 +316,15 @@ def save(operator,
                     pol = p3d.Polygon()
 
                     # texture info
-                    # TODO: if a polygon is assigned to a material which was deleted this will error
-                    pol.texture = ob.data.materials[tri.material_index].cdp3d.material_name
-                    pol.material = ob.data.materials[tri.material_index].cdp3d.material_type
-                    
+                    material = ob.data.materials[tri.material_index]
+                    if material is None:
+                        # default material
+                        pol.texture = 'colwhite'
+                        pol.material = 'FLAT'
+                    else:
+                        pol.texture = material.cdp3d.material_name
+                        pol.material = material.cdp3d.material_type
+
                     i = p.textures.index(pol.texture)
                     if pol.material == 'FLAT':
                         m.texture_infos[i].num_flat += 1
@@ -348,7 +355,7 @@ def save(operator,
             m.polys = []
             for t in range(len(p.textures)):
                 if t > 0:
-                    m.texture_infos[t].texture_start = m.texture_infos[t-1].texture_start 
+                    m.texture_infos[t].texture_start = m.texture_infos[t-1].texture_start
                     m.texture_infos[t].texture_start += m.texture_infos[t-1].num_flat
                     m.texture_infos[t].texture_start += m.texture_infos[t-1].num_flat_metal
                     m.texture_infos[t].texture_start += m.texture_infos[t-1].num_gouraud
@@ -359,7 +366,7 @@ def save(operator,
                 for i, pol in enumerate(polys):
                     if pol.texture == p.textures[t] and pol.material == 'FLAT':
                         m.polys.append(pol)
-                
+
                 for i, pol in enumerate(polys):
                     if pol.texture == p.textures[t] and pol.material == 'FLAT_METAL':
                         m.polys.append(pol)
@@ -448,7 +455,7 @@ def save_cca(operator,
     # p3d models must have a main mesh
     if main is None:
         print('!!! No main mesh found, .cca values might be wrong if main is not centered.')
-        f.write('!!! No main mesh found, .cca values might be wrong if main is not centered.')   
+        f.write('!!! No main mesh found, .cca values might be wrong if main is not centered.')
 
     f.write('Meshes: {}\n\n'.format(exported_meshes_string))
 

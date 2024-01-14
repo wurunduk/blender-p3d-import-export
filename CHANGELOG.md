@@ -8,6 +8,13 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 ### Changed
 ### Fixed
 
+## [1.8.0] 2024-01-14
+### Added
+- Blender 4.0 support
+### Fixed
+- Missing materials should no longer break export (default collwhite will be created to be used)
+- Some text typos
+
 ## [1.7.0] 2020-12-24
 ### Added
 - Added auto applying of object transformations on export
@@ -33,7 +40,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 ### Changed
 - Changed plugin mesh limits from 32k to 65k. If models start to crash CD, pls report!
 - Renamed 'CDRE' to 'Crashday' in panels for nicer look
-### Fixed 
+### Fixed
 - 'Crashday - Light' will not appear when mesh object is selected, 'Crashday - Mesh' will not appear when light is selected
 
 ## [1.5.1] 2020-11-19

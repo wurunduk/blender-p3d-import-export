@@ -17,7 +17,7 @@ class MATERIAL_PT_p3d_material(bpy.types.Panel):
                 img = context.material.node_tree.nodes.get('Image Texture')
                 if img and img.image:
                     return img.image.name
-                
+
             return None
 
         layout = self.layout
@@ -48,12 +48,12 @@ class DATA_PT_p3d_light(bpy.types.Panel):
     def poll(cls, context):
         light = context.light
         return (light and light.type in {'POINT', 'SUN', 'SPOT', 'AREA'})
-        
+
 
     def draw(self, context):
         if not context.light or not context.light.cdp3d:
             return
-        
+
         layout = self.layout
         settings = context.light.cdp3d
 

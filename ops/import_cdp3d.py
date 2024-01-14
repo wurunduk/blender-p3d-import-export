@@ -36,7 +36,9 @@ def shorten_path(path, ind):
 
 def find_texture_paths(filepath, search_path):
     drive, folders = get_folders_array_from_path(filepath)
-    is_car = True if folders[1] == 'cars' else False
+    # crashday car models are always put into ../content/content_type/cars/*car_name*/
+    # we can use this knowledge to accurately guess type of the model loaded and load additional textures in such cases
+    is_car = folders[1] == 'cars'
     car_name = None
     if is_car:
         car_name = folders[0]
@@ -51,6 +53,7 @@ def find_texture_paths(filepath, search_path):
         ind = folders.index('models')
         textures_mod_path = os.path.join(drive, *folders[:ind], 'textures\\')
         if is_car and car_name is not None:
+            # car specific textures
             textures_mod_car_path = os.path.join(textures_mod_path, 'cars\\', car_name)
             if os.path.isdir(textures_mod_car_path):
                 search_path.append(textures_mod_car_path)
@@ -59,7 +62,7 @@ def find_texture_paths(filepath, search_path):
         if os.path.isdir(textures_mod_path):
             search_path.append(textures_mod_path)
             print('Added local mod textures path {}'.format(shorten_path(textures_mod_path, ind)))
-        
+
     except ValueError:
         print('Couldn\'t load local mod textures, model was not in models folder')
 
@@ -68,6 +71,7 @@ def find_texture_paths(filepath, search_path):
         ind = folders.index('Crashday')
         textures_cd_path = os.path.join(drive, *folders[:ind+1], 'data\\content\\textures\\')
         if is_car and car_name is not None:
+            # car specific textures
             textures_cd_car_path = os.path.join(textures_cd_path, 'cars\\', car_name)
             if os.path.isdir(textures_cd_car_path):
                 search_path.append(textures_cd_car_path)
@@ -128,30 +132,30 @@ def add_material(obj, material_name):
         texImage = material.node_tree.nodes.new('ShaderNodeTexImage')
         texImage.image = bpy.data.textures.get( material_name[1]).image
 
-        if(material_name[0] == 'FLAT'):
-            principled_bsdf.inputs['Metallic'].default_value  = 0.0
-            principled_bsdf.inputs['Specular'].default_value = 1.0
-            principled_bsdf.inputs['Roughness'].default_value = 1.0
-        elif(material_name[0] == 'FLAT_METAL'):
-            principled_bsdf.inputs['Metallic'].default_value = 1.0
-            principled_bsdf.inputs['Specular'].default_value = .9
-            principled_bsdf.inputs['Roughness'].default_value = .9
-        elif(material_name[0] == 'GOURAUD'):
-            principled_bsdf.inputs['Metallic'].default_value = 0.0
-            principled_bsdf.inputs['Specular'].default_value = 0.1
-            principled_bsdf.inputs['Roughness'].default_value = 0.8
-        elif(material_name[0] == 'GOURAUD_METAL'):
-            principled_bsdf.inputs['Metallic'].default_value = .8
-            principled_bsdf.inputs['Specular'].default_value = .5
-            principled_bsdf.inputs['Roughness'].default_value = .2
-        elif(material_name[0] == 'GOURAUD_METAL_ENV'):
-            principled_bsdf.inputs['Metallic'].default_value = .5
-            principled_bsdf.inputs['Specular'].default_value = .3
-            principled_bsdf.inputs['Roughness'].default_value = .05
-        elif(material_name[0] == 'SHINING'):
-            principled_bsdf.inputs['Metallic'].default_value = 1.0
-            principled_bsdf.inputs['Specular'].default_value = .2
-            principled_bsdf.inputs['Roughness'].default_value = .0
+        # blender 4.0 renamed 'Specular' node input to 'Specular IOR Level'
+        if bpy.app.version[0] >= 4:
+            def set_material_params(metalness, specularity, roughness):
+                principled_bsdf.inputs['Metallic'].default_value = metalness
+                principled_bsdf.inputs['Specular IOR Level'].default_value = specularity
+                principled_bsdf.inputs['Roughness'].default_value = roughness
+        else:
+            def set_material_params(metalness, specularity, roughness):
+                principled_bsdf.inputs['Metallic'].default_value = metalness
+                principled_bsdf.inputs['Specular'].default_value = specularity
+                principled_bsdf.inputs['Roughness'].default_value = roughness
+
+        inputs_by_material_name = {
+            'FLAT' : (0.0, 1.0, 1.0),
+            'FLAT_METAL' : (1.0, 0.9, 0.9),
+            'GOURAUD' : (0.0, 0.1, 0.8),
+            'GOURAUD_METAL' : (0.8, 0.5, 0.2),
+            'GOURAUD_METAL_ENV' : (0.5, 0.3, 0.05),
+            'SHINING' : (1.0, .2, 0.0),
+        }
+
+        material_inputs = inputs_by_material_name[material_name[0]]
+        if material_inputs != None:
+            set_material_params(material_inputs[0], material_inputs[1], material_inputs[2])
 
         material.node_tree.links.new(principled_bsdf.inputs['Base Color'], texImage.outputs['Color'])
 
@@ -169,7 +173,7 @@ def create_meshes(p3d_model, col, use_edge_split_modifier, remove_doubles_distan
         #     obj.hide_set(True)
 
         items = mesh.cdp3d.bl_rna.properties['flags'].enum_items
-        
+
         flags = set()
         for flag in items:
             # print(flag.value)
@@ -189,7 +193,7 @@ def create_meshes(p3d_model, col, use_edge_split_modifier, remove_doubles_distan
             uvs.append((m.polys[i].u1, m.polys[i].v1))
             uvs.append((m.polys[i].u2, m.polys[i].v2))
             uvs.append((m.polys[i].u3, m.polys[i].v3))
-        
+
         mesh.from_pydata(m.vertices, [], faces)
 
         for i, f in enumerate(mesh.polygons):
@@ -263,7 +267,7 @@ def load(operator,
 
     print(p)
 
-    col = bpy.data.collections.new(file_name) 
+    col = bpy.data.collections.new(file_name)
     bpy.context.scene.collection.children.link(col)
 
     add_textures(p, search_path)
@@ -297,9 +301,9 @@ def add_position2(line, col, name):
     pos = float(line)
 
     create_pos(col, (0.0, pos, 0.0), name)
-    
 
-def load_cca(operator, context, filepath=''): 
+
+def load_cca(operator, context, filepath=''):
     file = open(filepath, 'r')
     content = file.readlines()
 
@@ -337,6 +341,3 @@ def load_cca(operator, context, filepath=''):
     file.close()
 
     return {'FINISHED'}
-    
-    
-
