@@ -1,7 +1,13 @@
 import struct
+import traceback
+from enum import Enum
+
+class ImportError(Enum):
+    NO_ERROR = 0
+    GENERIC_ERROR = 1
+    WRONG_P3D_TAG = 2
 
 # TODO:
-# - add error checking for struct reading\writing
 # - this is some terrible OOP like code which is terrible and only decreases redability. Burn this with fire and don't you dare copy it to somewhere else
 
 def rf(file, format):
@@ -281,54 +287,69 @@ class P3D:
             self.length, self.height, self.depth, self.num_lights,
             self.num_meshes, self.num_textures)
 
-    def read(self, file):
+    def read(self, operator, file):
         def r(format):
             return rf(file, format)
 
         def r_str():
             return rf_str(file)
 
-        # P3D2 signature
-        file.read(4)
+        try:
+            # P3D2 signature
+            tag = bytes(r('<3B'))
+            file.read(1) # skip P3D version
+            expected_tag = b'P3D'
+            if tag != expected_tag:
+                error_text = 'Model is missing a P3D tag. Maybe you are trying to open a model from unsupported game.\nThis importer only works for Crashday models.\n(Model tag read: "{}", expecting "{}")'.format(tag.decode("utf-8"), expected_tag.decode("utf-8"))
+                print(error_text)
+                operator.report({'ERROR_INVALID_INPUT'}, error_text)
+                return ImportError.WRONG_P3D_TAG
 
-        self.length = r('<f')
-        self.height = r('<f')
-        self.depth = r('<f')
+            self.length = r('<f')
+            self.height = r('<f')
+            self.depth = r('<f')
 
-        # texture list
-        # TEX + 4 bytes size signature
-        file.read(7)
-        self.num_textures = r('<B')
-        for i in range(self.num_textures):
-            tex_name = r_str()
-            if tex_name.endswith('.tga'):
-                tex_name = tex_name[0:-4]
-            self.textures.append(tex_name)
+            # texture list
+            # TEX + 4 bytes size signature
+            file.read(7)
+            self.num_textures = r('<B')
+            for i in range(self.num_textures):
+                tex_name = r_str()
+                if tex_name.endswith('.tga'):
+                    tex_name = tex_name[0:-4]
+                self.textures.append(tex_name)
 
-        # lights list
-        # LIGHTS + 4 bytes size signature
-        file.read(10)
+            # lights list
+            # LIGHTS + 4 bytes size signature
+            file.read(10)
 
-        self.num_lights = r('<H')
-        for i in range(self.num_lights):
-            p = Light()
-            p.read(file)
-            self.lights.append(p)
+            self.num_lights = r('<H')
+            for i in range(self.num_lights):
+                p = Light()
+                p.read(file)
+                self.lights.append(p)
 
-        # meshes list
-        # MESHES + 4 bytes size signature
-        file.read(10)
-        self.num_meshes = r('<H')
-        self.meshes = []
-        for i in range(self.num_meshes):
-            # SUBMESH + 4 bytes size signature
-            file.read(11)
-            p = Mesh()
-            p.read(file, self.textures, self.num_textures)
-            self.meshes.append(p)
+            # meshes list
+            # MESHES + 4 bytes size signature
+            file.read(10)
+            self.num_meshes = r('<H')
+            self.meshes = []
+            for i in range(self.num_meshes):
+                # SUBMESH + 4 bytes size signature
+                file.read(11)
+                p = Mesh()
+                p.read(file, self.textures, self.num_textures)
+                self.meshes.append(p)
 
-        file.read(8)
-        self.user_data_size = r('<i')
+            file.read(8)
+            self.user_data_size = r('<i')
+        except Exception as e:
+            error_text = 'A read error occured while opening this model. Either this model is not a Crashday .p3d model or it is corrupted.\n\n{}'.format(traceback.format_exc())
+            print(error_text)
+            operator.report({'ERROR_INVALID_INPUT'}, error_text)
+            return ImportError.GENERIC_ERROR
+
+        return ImportError.NO_ERROR
 
     def write(self, file):
         def w(format, *args):

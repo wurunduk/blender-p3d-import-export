@@ -262,8 +262,12 @@ def load(operator,
     p = p3d.P3D()
 
     file = open(filepath, 'rb')
-    p.read(file)
+    error = p.read(operator, file)
     file.close()
+
+    if error != p3d.ImportError.NO_ERROR:
+        print('Error occured while reading the .p3d file. Stopping import.')
+        return {'CANCELLED'}
 
     print(p)
 
