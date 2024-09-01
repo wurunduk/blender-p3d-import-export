@@ -8,6 +8,10 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 ### Changed
 ### Fixed
 
+## [1.8.1] 2024-09-01
+### Added
+- Added descriptive blender import errors when trying to import corrupt or other game's models.
+
 ## [1.8.0] 2024-01-14
 ### Added
 - Blender 4.0 support
